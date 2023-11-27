@@ -1,7 +1,7 @@
 #ifndef FLTK_GUARD
 #define FLTK_GUARD 1
 
-#include <cstdlib>  // for exit(0)
+#include <cstdlib> // for exit(0)
 
 #include <FL/Enumerations.H>
 #include <FL/Fl.H>
@@ -15,4 +15,4 @@
 #include <FL/Fl_JPEG_Image.H>
 #include <FL/Fl_PNG_Image.H>
 
-#endif  // #ifndef FLTK_GUARD
+#endif // #ifndef FLTK_GUARD
