@@ -9,7 +9,7 @@ add_library(game_logic
 )
 
 set(APP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/app")
-add_executable(app
+add_library(app
     ${APP_DIR}/app.h
     ${APP_DIR}/app.cpp
 )
@@ -17,4 +17,11 @@ target_link_libraries(app
     PRIVATE
     game_logic
     Graph_lib
+)
+
+add_executable(minesweeper
+    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+)
+target_link_libraries(minesweeper
+    app
 )
