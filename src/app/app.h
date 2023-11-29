@@ -1,26 +1,11 @@
-#ifndef GAME_H
-#define GAME_H
+#ifndef APP_H
+#define APP_H
 
 #include <game_logic/game_logic.h>
 
-namespace minesweeper::game {
+namespace minesweeper::app {
+class App;
 
-class Game
-{
-public:
-  Game() = default;
+} // namespace minesweeper::app
 
-  void start ();
-  void stop ();
-  void restart ();
-
-private:
-  minesweeper::game_logic::Field* field;
-
-  void update_scene ();
-  void make_move ();
-};
-
-}  // namespace minesweeper::game
-
-#endif  // #ifndef GAME_H
+#endif // #ifndef GAME_H
