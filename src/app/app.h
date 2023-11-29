@@ -3,25 +3,24 @@
 
 #include <game_logic/game_logic.h>
 
-namespace minesweeper::game
+namespace minesweeper::game {
+
+class Game
 {
+public:
+  Game() = default;
 
-  class Game
-  {
-  public:
-    Game() = default;
+  void start ();
+  void stop ();
+  void restart ();
 
-    void start();
-    void stop();
-    void restart();
+private:
+  minesweeper::game_logic::Field* field;
 
-  private:
-    minesweeper::core::game_logic::Field *field;
+  void update_scene ();
+  void make_move ();
+};
 
-    void update_scene();
-    void make_move();
-  };
+}  // namespace minesweeper::game
 
-} // namespace minesweeper::game
-
-#endif // #ifndef GAME_H
+#endif  // #ifndef GAME_H
