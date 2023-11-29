@@ -35,8 +35,3 @@ target_link_directories(Graph_lib
     PUBLIC
     ${FLTK_INCLUDE_DIR}/../lib
 )
-
-target_link_libraries(Graph_lib
-    PUBLIC
-    fltk
-)
