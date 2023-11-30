@@ -6,8 +6,7 @@
 
 namespace minesweeper::game_logic {
 
-struct Settings
-{
+struct Settings {
   uint8_t count_rows;
   uint8_t count_columns;
   uint8_t count_bomb;
@@ -21,36 +20,43 @@ const Settings kEasy{8, 8, 20};
 const Settings kMedium{10, 10, 50};
 const Settings kHard{15, 15, 100};
 
-struct Cell
-{
-  uint8_t _count_bomb;  // 9 means a bomb is in the cell
+struct Cell {
+  uint8_t count_bomb; // 9 means a bomb is in the cell
   bool is_marked{false};
   bool is_open{false};
 
-  Cell(uint8_t count_bomb) : _count_bomb{count_bomb} {};
+  Cell(uint8_t count_bomb) : count_bomb{count_bomb} {};
 
-  void open () { is_open = true; };
+  void open() { is_open = true; };
 
-  void mark () { is_marked = is_marked ? false : true; };
+  void mark() { is_marked = is_marked ? false : true; };
 };
 
 using field_matrix_t = std::vector<std::vector<Cell>>;
 
-class Field
-{
-public:
-  Field(Settings settings);
+struct IndexPair {
+  uint8_t row;
+  uint8_t column;
 
-  void open_cell (uint8_t row, uint8_t column);
-  void mark_cell (uint8_t row, uint8_t column);
-
-  const field_matrix_t& get_field () { return field; };
-
-private:
-  Settings _settings = kMedium;
-  field_matrix_t field;
+  IndexPair(uint8_t row, uint8_t column) : row{row}, column{column} {};
 };
 
-}  // namespace minesweeper::game_logic
+class Field {
+public:
+  Field(Settings settings, IndexPair start);
 
-#endif  // #ifndef GAME_LOGIC_H
+  void open_cell(IndexPair cell);
+  void mark_cell(IndexPair cell);
+
+  const field_matrix_t &get_field() { return field; };
+
+private:
+  Settings settings = kMedium;
+  field_matrix_t field;
+
+  void generate_field(IndexPair start);
+};
+
+} // namespace minesweeper::game_logic
+
+#endif // #ifndef GAME_LOGIC_H
