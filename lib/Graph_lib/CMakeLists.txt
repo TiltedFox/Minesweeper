@@ -35,3 +35,17 @@ target_link_directories(Graph_lib
     PUBLIC
     ${FLTK_INCLUDE_DIR}/../lib
 )
+
+target_link_libraries(Graph_lib
+    ${FLTK_LIBRARIES}
+    ${OPENGL_LIBRARIES}
+)
+
+if(WIN32)
+target_link_libraries(Graph_lib
+    fltk
+    fltk_jpeg
+    fltk_png
+    fltk_z
+)
+endif()
