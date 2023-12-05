@@ -24,10 +24,14 @@ add_library(Graph_lib
     ${SOURCES}
 )
 
+target_include_directories(Graph_lib
+    SYSTEM
+    PUBLIC
+    ${FLTK_INCLUDE_DIR}
+)
 
 target_include_directories(Graph_lib
     PUBLIC
-    ${FLTK_INCLUDE_DIR}
     ../
 )
 
