@@ -4,6 +4,7 @@
 #include <app/app.h>
 
 namespace minesweeper::app {
+<<<<<<< HEAD
 
 class Main_menu : public AppState {
 public:
@@ -21,10 +22,28 @@ private:
   Graph_lib::Button multiplayer_button;
   Graph_lib::Button quit;
   Graph_lib::Text header;
+=======
+class TestState1;
+class TestState2;
+
+class TestState2 : public AppState {
+public:
+  TestState2(App *app);
+
+  void enter() override {
+    app->attach(test_button);
+    std::cout << "Enter state2\n";
+  }
+  void exit() override { app->detach(test_button); }
+
+private:
+  Graph_lib::Button test_button;
+>>>>>>> dev
 };
 
 class Singleplayer_menu : public AppState {
 public:
+<<<<<<< HEAD
   static AppState &get_instance() {
     static Singleplayer_menu singleton;
     return singleton;
@@ -72,6 +91,18 @@ public:
 
 private:
   Game_menu();
+=======
+  TestState1(App *app);
+
+  void enter() override {
+    app->attach(test_button);
+    std::cout << "Enter state1\n";
+  }
+  void exit() override { app->detach(test_button); }
+
+private:
+  Graph_lib::Button test_button;
+>>>>>>> dev
 };
 } // namespace minesweeper::app
 

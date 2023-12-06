@@ -1,6 +1,7 @@
 #ifndef APP_H
 #define APP_H
 
+#include <memory>
 #include <string>
 
 #include <Graph_lib/GUI.h>
@@ -15,19 +16,23 @@ class App;
 
 class AppState {
 public:
-  virtual void enter(App *app) = 0;
-  virtual void exit(App *app) = 0;
+  AppState(App *app) : app{app} {};
+  virtual void enter() = 0;
+  virtual void exit() = 0;
   virtual ~AppState(){};
+
+protected:
+  App *app;
 };
 
 class App : public Graph_lib::Window {
 public:
   App(int w, int h, const std::string &title);
 
-  void set_state(AppState &new_state);
+  void set_state(AppState *new_state);
 
 private:
-  AppState *current_state;
+  std::unique_ptr<AppState> current_state;
 };
 
 inline App &get_app_ref(Graph_lib::Address widget_address) {
