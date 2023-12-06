@@ -1,6 +1,7 @@
-#include <Graph_lib/Graph.h>
 #include <app/app.h>
+#include <app/app_states.h>
 
+<<<<<<< HEAD
 namespace minesweeper::app {} // namespace minesweeper::app
 
 void Win_window::easy() {}
@@ -138,3 +139,19 @@ int main() {
 
     return 0;
 }
+=======
+namespace minesweeper::app {
+void App::set_state(AppState &new_state) {
+  current_state->exit(this);
+  current_state = &new_state;
+  current_state->enter(this);
+}
+
+App::App(int w, int h, const std::string &title)
+    : Graph_lib::Window(w, h, title) {
+  current_state = &TestState1::get_instance();
+  current_state->enter(this);
+}
+
+} // namespace minesweeper::app
+>>>>>>> dev
