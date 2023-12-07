@@ -7,18 +7,38 @@
 
 #include <game_logic/game_logic.h>
 
+using namespace std;
+
 namespace minesweeper::game_logic {
 
 Field::Field(Settings settings, IndexPair start) : settings{settings} {
-  field_matrix_t field_temp(settings.count_columns,
-                            std::vector<Cell>{settings.count_rows, Cell{0}});
+  field_matrix_t field_temp(settings.count_rows,
+                            vector<Cell>(settings.count_columns, Cell{0}));
 
   field = field_temp;
   generate_field(start);
 }
 
-void Field::open_cell(IndexPair cell) {
-  field.at(cell.row).at(cell.column).open();
+bool Field::open_cell(IndexPair cell) {
+  Cell &curr_cell = field.at(cell.row).at(cell.column);
+
+  curr_cell.open();
+
+  if (curr_cell.count_bomb == 9)
+    return false;
+
+  if (curr_cell.count_bomb == 0)
+    for (int i = cell.row - 1; i <= cell.row + 1; i++)
+      for (int j = cell.column - 1; j <= cell.column + 1; j++) {
+        if (!is_valid_index(i, j))
+          continue;
+        if (field.at(i).at(j).is_open)
+          continue;
+
+        open_cell(IndexPair{i, j});
+      }
+
+  return true;
 }
 
 void Field::mark_cell(IndexPair cell) {
@@ -26,26 +46,44 @@ void Field::mark_cell(IndexPair cell) {
 }
 
 void Field::generate_field(IndexPair start) {
-  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-  std::vector<int> row_indexes;
-  std::vector<int> column_indexes;
+  vector<IndexPair> bomb_indexes = get_bomb_indexes(start);
+
+  for (int i = 0; i < settings.count_bomb; i++) {
+    int row = bomb_indexes[i].row;
+    int column = bomb_indexes[i].column;
+
+    field.at(row).at(column).count_bomb = 9; // set cell as bomb
+
+    for (int j = row - 1; j <= row + 1; j++)
+      for (int k = column - 1; k <= column + 1; k++) {
+        if (!is_valid_index(j, k))
+          continue;
+        if (field.at(j).at(k).count_bomb == 9)
+          continue;
+
+        field.at(j).at(k).count_bomb += 1;
+      }
+  }
+}
+
+vector<IndexPair> Field::get_bomb_indexes(IndexPair start) {
+  unsigned seed = chrono::system_clock::now().time_since_epoch().count();
+  vector<IndexPair> bomb_indexes;
 
   for (int i = 0; i < settings.count_rows; i++)
-    if (i != start.row)
-      row_indexes.push_back(i);
+    for (int j = 0; j < settings.count_columns; j++)
+      if (i != start.row || j != start.column)
+        bomb_indexes.push_back(IndexPair{i, j});
 
-  for (int i = 0; i < settings.count_columns; i++)
-    if (i != start.column)
-      column_indexes.push_back(i);
+  shuffle(bomb_indexes.begin(), bomb_indexes.end(),
+          default_random_engine(seed));
 
-  std::shuffle(row_indexes.begin(), row_indexes.end(),
-               std::default_random_engine(seed));
-  std::shuffle(column_indexes.begin(), column_indexes.end(),
-               std::default_random_engine(seed));
+  return bomb_indexes;
+}
 
-  for (int i = 0; i < settings.count_bomb; i++)
-    field.at(row_indexes[i]).at(column_indexes[i]).count_bomb =
-        9; // set cell as bomb
+bool Field::is_valid_index(int row, int column) {
+  return (row >= 0 && column >= 0) &&
+         (row < settings.count_rows && column < settings.count_columns);
 }
 
 } // namespace minesweeper::game_logic
