@@ -4,58 +4,36 @@
 #include <app/app.h>
 
 namespace minesweeper::app {
-<<<<<<< HEAD
+
+class Main_menu;
+class Singleplayer_menu;
+class Multiplayer_menu;
+class Game_menu;
 
 class Main_menu : public AppState {
 public:
-  static AppState &get_instance() {
-    static Main_menu singleton;
-    return singleton;
-  }
+  Main_menu(App *app);
 
-  void enter(App *app) override;
-  void exit(App *app) override;
+  void enter() override;
+  void exit() override;
 
 private:
-  Main_menu();
   Graph_lib::Button singleplayer_button;
   Graph_lib::Button multiplayer_button;
   Graph_lib::Button quit;
   Graph_lib::Text header;
-=======
-class TestState1;
-class TestState2;
-
-class TestState2 : public AppState {
-public:
-  TestState2(App *app);
-
-  void enter() override {
-    app->attach(test_button);
-    std::cout << "Enter state2\n";
-  }
-  void exit() override { app->detach(test_button); }
-
-private:
-  Graph_lib::Button test_button;
->>>>>>> dev
 };
 
 class Singleplayer_menu : public AppState {
 public:
-<<<<<<< HEAD
-  static AppState &get_instance() {
-    static Singleplayer_menu singleton;
-    return singleton;
-  }
+  Singleplayer_menu(App *app);
 
-  void enter(App *app) override;
-  void exit(App *app) override;
+  void enter() override;
+  void exit() override;
 
 private:
-  Singleplayer_menu();
-  Graph_lib::Button easy_dif;         //Singleplayer menu,
-  Graph_lib::Button medium_dif;       //Buttons and boxes for choosing difficulty
+  Graph_lib::Button easy_dif;   // Singleplayer menu,
+  Graph_lib::Button medium_dif; // Buttons and boxes for choosing difficulty
   Graph_lib::Button hard_dif;
   Graph_lib::Button custom_dif;
   Graph_lib::In_box area_box;
@@ -65,44 +43,25 @@ private:
 
 class Multiplayer_menu : public AppState {
 public:
-  static AppState &get_instance() {
-    static Multiplayer_menu singleton;
-    return singleton;
-  }
+  Multiplayer_menu(App *app);
 
-  void enter(App *app) override;
-  void exit(App *app) override;
+  void enter() override;
+  void exit() override;
 
 private:
-  Multiplayer_menu();
   Graph_lib::In_box ip_box;
   Graph_lib::Button start_game_button;
 };
 
 class Game_menu : public AppState {
 public:
-  static AppState &get_instance() {
-    static Game_menu singleton;
-    return singleton;
-  }
+  Game_menu(App *app);
 
-  void enter(App *app) override {};
-  void exit(App *app) override {};
+  void enter() override;
+  void exit() override;
 
 private:
-  Game_menu();
-=======
-  TestState1(App *app);
-
-  void enter() override {
-    app->attach(test_button);
-    std::cout << "Enter state1\n";
-  }
-  void exit() override { app->detach(test_button); }
-
-private:
-  Graph_lib::Button test_button;
->>>>>>> dev
+  Graph_lib::Text test_text;
 };
 } // namespace minesweeper::app
 

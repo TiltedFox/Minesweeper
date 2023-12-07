@@ -20,7 +20,6 @@ target_link_libraries(app
     game_logic
     Graph_lib
 )
-
 add_executable(minesweeper
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 )

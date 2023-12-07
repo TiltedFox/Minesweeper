@@ -9,15 +9,9 @@ void App::set_state(AppState *new_state) {
 }
 
 App::App(int w, int h, const std::string &title)
-<<<<<<< HEAD
-    : Graph_lib::Window(w, h, title) {
-  current_state = &Main_menu::get_instance();
-  current_state->enter(this);
-=======
     : Graph_lib::Window(w, h, title),
-      current_state{std::make_unique<TestState1>(this)} {
+      current_state{std::make_unique<Main_menu>(this)} {
   current_state->enter();
->>>>>>> dev
 }
 
 } // namespace minesweeper::app

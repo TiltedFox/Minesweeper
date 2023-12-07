@@ -2,6 +2,9 @@
 #include <app/app.h>
 
 int main() {
-  minesweeper::app::App minesweeper{1000, 600, "Minesweeper"};
+  int w = 1000;
+  int h = 600;
+
+  minesweeper::app::App minesweeper{w, h, "Minesweeper"};
   Graph_lib::gui_main();
 }
