@@ -63,6 +63,18 @@ public:
 private:
   Graph_lib::Text test_text;
 };
+
+class Test : public AppState {
+public:
+  Test(App *app);
+
+  void enter() override { app->attach(test_button); };
+  void exit() override { app->detach(test_button); };
+
+private:
+  Graph_lib::Button test_button;
+};
+
 } // namespace minesweeper::app
 
 #endif // #ifndef APP_STATES_H

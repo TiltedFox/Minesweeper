@@ -137,4 +137,16 @@ Game_menu::Game_menu(App *app)
 void Game_menu::enter() { app->attach(test_text); }
 
 void Game_menu::exit() { app->detach(test_text); }
+
+Test::Test(App *app)
+    : AppState(app),
+      test_button({50, 50}, 50, 50, "LOL",
+                  [](Graph_lib::Address, Graph_lib::Address button_addr) {
+                    Graph_lib::Button &button = get_button_ref(button_addr);
+                    if (button.is_LMB_click())
+                      std::cout << "Left click";
+                    else if (button.is_RMB_click())
+                      std::cout << "Right click";
+                  }){};
+
 } // namespace minesweeper::app
