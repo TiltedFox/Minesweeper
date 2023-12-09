@@ -1,6 +1,6 @@
 #ifndef APP_STATES_H
 #define APP_STATES_H
-
+#include <vector>
 #include <app/app.h>
 
 namespace minesweeper::app {
@@ -8,7 +8,7 @@ namespace minesweeper::app {
 class Main_menu;
 class Singleplayer_menu;
 class Multiplayer_menu;
-class Game_menu;
+
 
 class Main_menu : public AppState {
 public:
@@ -53,15 +53,36 @@ private:
   Graph_lib::Button start_game_button;
 };
 
-class Game_menu : public AppState {
+
+
+
+struct Button_Cell : Graph_lib::Button {
+  Button_Cell(Graph_lib::Point xy, Graph_lib::Callback cb, int r, int c);
+
+
+
+  void attach (Graph_lib::Window& win) override;
+  minesweeper::game_logic::IndexPair get_user_click(){
+    return minesweeper::game_logic::IndexPair(row, column);
+  }
+
+  static constexpr int size = 50;
+  private:
+    int row;
+    int column;
+};
+
+class Game : public AppState {
 public:
-  Game_menu(App *app);
+  Game(App *app);
 
   void enter() override;
   void exit() override;
 
 private:
-  Graph_lib::Text test_text;
+  Graph_lib::Vector_ref <Button_Cell> cells;
+  minesweeper::game_logic::Field* field;
+  static void clicked(Button_Cell* c);
 };
 } // namespace minesweeper::app
 

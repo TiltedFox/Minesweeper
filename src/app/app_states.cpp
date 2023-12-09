@@ -1,5 +1,5 @@
 #include <app/app_states.h>
-
+#include <iostream>
 namespace minesweeper::app {
 
 Main_menu::Main_menu(App *app)
@@ -53,25 +53,25 @@ Singleplayer_menu::Singleplayer_menu(App *app)
                app->x_max() / 5, app->y_max() / 10, "Easy",
                [](Graph_lib::Address, Graph_lib::Address button_addr) {
                  App &app = get_app_ref(button_addr);
-                 app.set_state(new Game_menu{&app});
+                 app.set_state(new Game{&app});
                }},
       medium_dif{Graph_lib::Point{app->x_max() / 5, app->y_max() / 2},
                  app->x_max() / 5, app->y_max() / 10, "Medium",
                  [](Graph_lib::Address, Graph_lib::Address button_addr) {
                    App &app = get_app_ref(button_addr);
-                   app.set_state(new Game_menu{&app});
+                   app.set_state(new Game{&app});
                  }},
       hard_dif{Graph_lib::Point{app->x_max() / 5, app->y_max() * 2 / 3},
                app->x_max() / 5, app->y_max() / 10, "Hard",
                [](Graph_lib::Address, Graph_lib::Address button_addr) {
                  App &app = get_app_ref(button_addr);
-                 app.set_state(new Game_menu{&app});
+                 app.set_state(new Game{&app});
                }},
       custom_dif{Graph_lib::Point{app->x_max() * 3 / 5, app->y_max() / 3},
                  app->x_max() / 5, app->y_max() / 10, "Custom",
                  [](Graph_lib::Address, Graph_lib::Address button_addr) {
                    App &app = get_app_ref(button_addr);
-                   app.set_state(new Game_menu{&app});
+                   app.set_state(new Game{&app});
                  }},
       area_box{Graph_lib::Point{app->x_max() * 3 / 5, app->y_max() / 2},
                app->x_max() / 5, app->y_max() / 10, "Area"},
@@ -82,7 +82,7 @@ Singleplayer_menu::Singleplayer_menu(App *app)
                         app->x_max() / 4, app->y_max() / 10, "Start game",
                         [](Graph_lib::Address, Graph_lib::Address button_addr) {
                           App &app = get_app_ref(button_addr);
-                          app.set_state(new Game_menu{&app});
+                          app.set_state(new Game{&app});
                         }} {};
 
 void Singleplayer_menu::enter() {
@@ -115,7 +115,7 @@ Multiplayer_menu::Multiplayer_menu(App *app)
                         app->x_max() / 4, app->y_max() / 10, "Start game",
                         [](Graph_lib::Address, Graph_lib::Address button_addr) {
                           App &app = get_app_ref(button_addr);
-                          app.set_state(new Game_menu{&app});
+                          app.set_state(new Game{&app});
                         }} {};
 
 void Multiplayer_menu::enter() {
@@ -128,13 +128,53 @@ void Multiplayer_menu::exit() {
   app->detach(start_game_button);
 }
 
-Game_menu::Game_menu(App *app)
-    : AppState{app},
-      test_text{Graph_lib::Point{(app->x_max() - app->x_max() / 4) / 2,
-                                 app->y_max() / 2},
-                "Game menu!"} {};
+Button_Cell::Button_Cell(Graph_lib::Point xy, Graph_lib::Callback cb, int r, int c)
+  :Button(xy, size, size, "", cb)
+  , row{r}
+  , column{c} {}
 
-void Game_menu::enter() { app->attach(test_text); }
+void Button_Cell::attach(Graph_lib::Window& win) {
+  Button::attach(win);
+}
 
-void Game_menu::exit() { app->detach(test_text); }
+int r = 8;
+int c = 8;
+
+Game::Game(App *app) 
+    : AppState{app}
+    ,field{nullptr}
+    {
+      for (int i = 0; i < r; ++i)
+      for (int j = 0; j < c; ++j)
+      {
+          cells.push_back (new Button_Cell{Graph_lib::Point{20 + j*Button_Cell::size,
+                                          20 + (r -1 - i)*Button_Cell::size},
+                                    [](Graph_lib::Address, Graph_lib::Address button_addr) {
+                                    auto widget_p = (static_cast<Button_Cell *>(button_addr));
+                                    clicked(widget_p);
+                                    }
+                                    , i, j});
+      }
+      r ++;
+      c ++;
+    }
+void Game::enter() {
+  for (int i = 0; i < cells.size(); i++) {
+    app -> attach(cells[i]) ;
+  }
+}
+void Game::exit() {
+  for (int i = 0; i < cells.size(); i++) {
+    app -> detach(cells[i]);
+  }
+}
+
+void Game::clicked(Button_Cell* c) {
+  minesweeper::game_logic::IndexPair pair = c->get_user_click(); // pair = { row : int , column : int }
+  c->hide();
+  //функция которая получит новое состояние матрицы поля
+  //функция которая перерисует
+  std::cout <<"pair" << pair.row  << " " << pair.column << std::endl;
+
+}
 } // namespace minesweeper::app
