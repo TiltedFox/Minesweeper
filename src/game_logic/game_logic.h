@@ -15,9 +15,9 @@ struct Settings {
         count_bomb{count_bomb} {};
 };
 
-const Settings kEasy{8, 8, 20};
-const Settings kMedium{10, 10, 50};
-const Settings kHard{15, 15, 100};
+const Settings kEasy{8, 8, 10};
+const Settings kMedium{10, 10, 25};
+const Settings kHard{15, 15, 50};
 
 struct Cell {
   int count_bomb; // 9 means a bomb is in the cell
