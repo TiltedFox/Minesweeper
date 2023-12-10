@@ -1,5 +1,5 @@
 #include <app/app_states.h>
-
+#include <iostream>
 namespace minesweeper::app {
 
 Main_menu::Main_menu(App *app)

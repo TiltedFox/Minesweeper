@@ -1,14 +1,13 @@
 #ifndef APP_STATES_H
 #define APP_STATES_H
-
 #include <app/app.h>
+#include <vector>
 
 namespace minesweeper::app {
 
 class Main_menu;
 class Singleplayer_menu;
 class Multiplayer_menu;
-class Game_menu;
 
 class Main_menu : public AppState {
 public:
