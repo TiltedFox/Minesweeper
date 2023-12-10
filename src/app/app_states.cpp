@@ -169,9 +169,9 @@ void Game::exit() { dettach_all(); }
 void Game::on_click(CellButton *btn) {
   minesweeper::game_logic::Field &field = this->field;
   minesweeper::game_logic::IndexPair cell = btn->get_index();
-
   if (field.get().empty())
     field.generate_field(cell);
+    attach_number_from_field();
 
   field.open_cell(cell);
 
@@ -185,8 +185,24 @@ void Game::update() {
 
 void Game::attach_all_from_field() {
   for (int i = 0; i < cells.size(); i++) {
-    if (!field.is_open(cells[i].get_index()))
+    if (!field.is_open(cells[i].get_index()))  
       app->attach(cells[i]);
+    else
+      app->attach(Numbers[i]);
+  }
+}
+
+void Game::attach_number_from_field() {
+  int r = field.get().size();
+  int c = field.get()[0].size();
+
+  for (int i = 0; i < r; i++) {
+    for (int j = 0; j < c; j++) {
+      int val = field.get()[i][j].count_bomb;
+      Numbers.push_back(new Graph_lib::Text( Graph_lib::Point{40 + j * CellButton::size,
+                           50 + (r - 1 - i) *
+                                    CellButton::size}, std::to_string(val) ));
+    }
   }
 }
 

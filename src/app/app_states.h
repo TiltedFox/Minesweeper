@@ -76,11 +76,14 @@ public:
 
 private:
   Graph_lib::Vector_ref<CellButton> cells;
+  Graph_lib::Vector_ref<Graph_lib::Text> Numbers;
   minesweeper::game_logic::Field field;
 
   void init_buttons();
   void update();
   void attach_all_from_field();
+  void attach_number_from_field();
+  void dattach_all_number();
   void dettach_all();
 
   void on_click(CellButton *btn);
