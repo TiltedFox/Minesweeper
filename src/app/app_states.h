@@ -53,16 +53,40 @@ private:
   Graph_lib::Button start_game_button;
 };
 
-class Game_menu : public AppState {
+struct CellButton : Graph_lib::Button {
+  CellButton(Graph_lib::Point xy, Graph_lib::Callback cb, int r, int c);
+
+  void attach(Graph_lib::Window &win) override;
+  minesweeper::game_logic::IndexPair get_index() {
+    return minesweeper::game_logic::IndexPair(row, column);
+  }
+
+  static constexpr int size = 50;
+
+private:
+  int row;
+  int column;
+};
+
+class Game : public AppState {
 public:
-  Game_menu(App *app);
+  Game(App *app, minesweeper::game_logic::Settings settings);
 
   void enter() override;
   void exit() override;
 
 private:
-  Graph_lib::Text test_text;
+  Graph_lib::Vector_ref<CellButton> cells;
+  minesweeper::game_logic::Field field;
+
+  void init_buttons();
+  void update();
+  void attach_all_from_field();
+  void dettach_all();
+
+  void on_click(CellButton *btn);
 };
+
 } // namespace minesweeper::app
 
 #endif // #ifndef APP_STATES_H
