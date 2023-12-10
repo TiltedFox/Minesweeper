@@ -198,10 +198,13 @@ void Game::attach_number_from_field() {
 
   for (int i = 0; i < r; i++) {
     for (int j = 0; j < c; j++) {
-      int val = field.get()[i][j].count_bomb;
+      std::string val = std::to_string(field.get()[i][j].count_bomb);
+      if (val == "9"){
+        val = "*";
+      }
       Numbers.push_back(new Graph_lib::Text( Graph_lib::Point{40 + j * CellButton::size,
                            50 + (r - 1 - i) *
-                                    CellButton::size}, std::to_string(val) ));
+                                    CellButton::size}, val ));
     }
   }
 }
