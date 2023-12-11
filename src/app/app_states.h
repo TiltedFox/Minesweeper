@@ -53,7 +53,8 @@ private:
 };
 
 struct CellButton : Graph_lib::Button {
-  CellButton(Graph_lib::Point xy, Graph_lib::Callback cb, int r, int c, int r_count, int c_count);
+  CellButton(Graph_lib::Point xy, Graph_lib::Callback cb, int r, int c,
+             int r_count, int c_count);
 
   void attach(Graph_lib::Window &win) override;
   minesweeper::game_logic::IndexPair get_index() {
@@ -89,21 +90,6 @@ private:
 
   void on_click(CellButton *btn);
 };
-
-<<<<<<< HEAD
-class Test : public AppState {
-public:
-  Test(App *app);
-
-  void enter() override { app->attach(test_button); };
-  void exit() override { app->detach(test_button); };
-
-private:
-  Graph_lib::Button test_button;
-};
-
-=======
->>>>>>> game_state
 } // namespace minesweeper::app
 
 #endif // #ifndef APP_STATES_H
