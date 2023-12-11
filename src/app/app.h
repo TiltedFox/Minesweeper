@@ -41,5 +41,9 @@ inline App &get_app_ref(Graph_lib::Address widget_address) {
   return static_cast<App &>(widget_p->window());
 }
 
+inline Graph_lib::Button &get_button_ref(Graph_lib::Address button_address) {
+  return *static_cast<Graph_lib::Button *>(button_address);
+}
+
 } // namespace minesweeper::app
 #endif // #ifndef GAME_H
