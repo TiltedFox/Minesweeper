@@ -140,35 +140,35 @@ CellButton::CellButton(Graph_lib::Point xy, Graph_lib::Callback cb, int r,
 void CellButton::attach(Graph_lib::Window &win) { Button::attach(win); }
 
 Game::Game(App *app, minesweeper::game_logic::Settings settings)
-    : AppState{app}, 
-      field{settings},
+    : AppState{app}, field{settings},
       quit{Graph_lib::Point{(app->x_max() - app->x_max() / 4) / 2,
-                            app->y_max() * 5 / 6},
+                            app->y_max() * 7 / 8},
            app->x_max() / 4, app->y_max() / 10, "Quit",
            [](Graph_lib::Address, Graph_lib::Address button_addr) {
              App &app = get_app_ref(button_addr);
-             app.hide();
+             app.set_state(new Main_menu(&app));
            }},
-      rec {Graph_lib::Point(600,100), Graph_lib::Point(800,200)}
+      rec{Graph_lib::Point(350, 150), Graph_lib::Point(750, 450)},
+      lose_text{Graph_lib::Point(500,20), "you are dick"}
 
-      
-     {
-      for (int i = 0; i < settings.count_rows; ++i)
-        for (int j = 0; j < settings.count_columns; ++j) {
-          int size = settings.count_rows < settings.count_columns ? settings.count_rows : settings.count_columns;
-          cells.push_back(new CellButton{
-              Graph_lib::Point{300 + j * (500 / size),
-                              50 + (settings.count_rows - 1 - i) *
-                                        (500 / size)},
-              [](Graph_lib::Address, Graph_lib::Address button_addr) {
-                auto widget_p = (static_cast<CellButton *>(button_addr));
-                App &app = get_app_ref(button_addr);
-                Game &game = dynamic_cast<Game &>(app.get_state());
+{
+  for (int i = 0; i < settings.count_rows; ++i)
+    for (int j = 0; j < settings.count_columns; ++j) {
+      int size = settings.count_rows < settings.count_columns
+                     ? settings.count_rows
+                     : settings.count_columns;
+      cells.push_back(new CellButton{
+          Graph_lib::Point{300 + j * (500 / size),
+                           50 + (settings.count_rows - 1 - i) * (500 / size)},
+          [](Graph_lib::Address, Graph_lib::Address button_addr) {
+            auto widget_p = (static_cast<CellButton *>(button_addr));
+            App &app = get_app_ref(button_addr);
+            Game &game = dynamic_cast<Game &>(app.get_state());
 
-                game.on_click(widget_p);
-              },
-              i, j, settings.count_rows, settings.count_columns});
-        }
+            game.on_click(widget_p);
+          },
+          i, j, settings.count_rows, settings.count_columns});
+    }
 }
 
 void Game::enter() {
@@ -177,76 +177,98 @@ void Game::enter() {
   }
 }
 
-void Game::exit() { dettach_all(); }
+void Game::exit() { 
+  dettach_all_cells(); 
+  dettach_all_number();
+  app->detach(quit);
+  app->detach(lose_text);
+}
 
 void Game::on_click(CellButton *btn) {
   minesweeper::game_logic::Field &field = this->field;
   minesweeper::game_logic::IndexPair cell = btn->get_index();
-  if (field.get().empty()){
+  if (field.get().empty()) {
     field.generate_field(cell);
     attach_number_from_field();
-
   }
-    
 
   field.open_cell(cell);
 
   this->update();
 
-  if (field.is_bomb(cell)){
-    dettach_all();
+  if (field.is_bomb(cell)) {
+    dettach_all_cells();
+    open_all_number();
     attach_lose_state();
-    }
+    quit.hide();
+    quit.show();
+  }
 }
 
 void Game::update() {
-  dettach_all();
+  dettach_all_cells();
   attach_all_from_field();
 }
 
 void Game::attach_lose_state() {
-  rec.set_fill_color(Graph_lib::Color::red);
-  app->attach(rec);
+  // rec.set_fill_color(Graph_lib::Color::red);
+  app->attach(quit);
+  lose_text.set_font_size(30);
+  app->attach(lose_text);
 }
 
 void Game::attach_all_from_field() {
   for (int i = 0; i < cells.size(); i++) {
-    if (!field.is_open(cells[i].get_index()))  
+    if (!field.is_open(cells[i].get_index()))
       app->attach(cells[i]);
     else
       app->attach(Numbers[i]);
-      // if (field.get().at(cells[i].get_index().row).at(cells[i].get_index().column).count_bomb == 9){
-      //   std::cout << "boom";
-      // }
+    // if
+    // (field.get().at(cells[i].get_index().row).at(cells[i].get_index().column).count_bomb
+    // == 9){
+    //   std::cout << "boom";
+    // }
   }
 }
 
 void Game::attach_number_from_field() {
   int r = field.get().size();
   int c = field.get()[0].size();
-  int size = r < c ? r: c;
+  int size = r < c ? r : c;
 
   for (int i = 0; i < r; i++) {
     for (int j = 0; j < c; j++) {
       std::string val = std::to_string(field.get()[i][j].count_bomb);
-      if (val == "9"){
+      if (val == "9") {
         val = "*";
       }
-      if (val == "0"){
+      if (val == "0") {
         val = "";
       }
 
-      Numbers.push_back(new Graph_lib::Text( Graph_lib::Point{320 + j * (500 / size),
-                           80 + (r - 1 - i) *
-                                    (500 / size)}, val ));
+      Numbers.push_back(
+          new Graph_lib::Text(Graph_lib::Point{320 + j * (500 / size),
+                                               80 + (r - 1 - i) * (500 / size)},
+                              val));
     }
   }
-  // Numbers.push_back(new Graph_lib::Text( Graph_lib::Point{400,200}, "GGGGGGGGGG" ));
+  // Numbers.push_back(new Graph_lib::Text( Graph_lib::Point{400,200},
+  // "GGGGGGGGGG" ));
 }
-
-void Game::dettach_all() {
+void Game::open_all_number() {
+  for (int i = 0; i < Numbers.size(); i++) {
+    app->attach(Numbers[i]);
+  }
+}
+void Game::dettach_all_cells() {
   for (int i = 0; i < cells.size(); i++) {
     app->detach(cells[i]);
+  }
+}
+
+void Game::dettach_all_number() {
+  for (int i = 0; i < Numbers.size(); i ++){
+    app->detach(Numbers[i]);
   }
 }
 

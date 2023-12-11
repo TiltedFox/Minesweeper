@@ -54,6 +54,8 @@ public:
   const field_matrix_t &get() { return field; };
 
 private:
+  int count_open_sells;
+
   Settings settings = kMedium;
   field_matrix_t field;
 
