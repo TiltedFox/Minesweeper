@@ -53,14 +53,12 @@ private:
 };
 
 struct CellButton : Graph_lib::Button {
-  CellButton(Graph_lib::Point xy, Graph_lib::Callback cb, int r, int c);
+  CellButton(Graph_lib::Point xy, Graph_lib::Callback cb, int r, int c, int r_count, int c_count);
 
   void attach(Graph_lib::Window &win) override;
   minesweeper::game_logic::IndexPair get_index() {
     return minesweeper::game_logic::IndexPair(row, column);
   }
-
-  static constexpr int size = 50;
 
 private:
   int row;
@@ -75,10 +73,13 @@ public:
   void exit() override;
 
 private:
+  Graph_lib::Vector_ref<Graph_lib::Text> win_state_text;
+  Graph_lib::Rectangle rec;
   Graph_lib::Vector_ref<CellButton> cells;
   Graph_lib::Vector_ref<Graph_lib::Text> Numbers;
   minesweeper::game_logic::Field field;
-
+  Graph_lib::Button quit;
+  void attach_lose_state();
   void init_buttons();
   void update();
   void attach_all_from_field();

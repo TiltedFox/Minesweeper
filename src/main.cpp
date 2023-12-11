@@ -2,7 +2,7 @@
 #include <app/app.h>
 
 int main() {
-  int w = 1000;
+  int w = 1100;
   int h = 600;
 
   minesweeper::app::App minesweeper{w, h, "Minesweeper"};
