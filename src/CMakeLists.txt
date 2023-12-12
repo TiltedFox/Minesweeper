@@ -1,3 +1,6 @@
+set(Boost_USE_STATIC_LIBS ON)
+find_package(Boost COMPONENTS thread)
+
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
@@ -15,11 +18,24 @@ add_library(app
     ${APP_DIR}/app_states.h
     ${APP_DIR}/app_states.cpp
 )
+if(WIN32)
+  target_link_libraries(app
+  PUBLIC
+  wsock32
+  ws2_32
+)
+endif()
+target_include_directories(app
+    PUBLIC
+    ${Boost_INCLUDE_DIRS}
+)
 target_link_libraries(app
     PUBLIC
     game_logic
     Graph_lib
+    ${Boost_LIBRARIES}
 )
+
 add_executable(minesweeper
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 )

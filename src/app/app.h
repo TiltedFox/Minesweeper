@@ -4,6 +4,16 @@
 #include <memory>
 #include <string>
 
+// don't move below graph lib unless you want an error
+#include <boost/asio.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/beast/core.hpp>
+#include <boost/beast/websocket.hpp>
+#include <boost/bind/bind.hpp>
+#include <boost/thread/thread.hpp>
+
+#include <boost/chrono.hpp>
+
 #include <Graph_lib/GUI.h>
 #include <Graph_lib/Window.h>
 
@@ -30,6 +40,8 @@ public:
   App(int w, int h, const std::string &title);
 
   void set_state(AppState *new_state);
+
+  AppState &get_state() { return *current_state; };
 
 private:
   std::unique_ptr<AppState> current_state;

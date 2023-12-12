@@ -1,4 +1,3 @@
-#include <Graph_lib/Simple_window.h>
 #include <app/app.h>
 
 int main() {
