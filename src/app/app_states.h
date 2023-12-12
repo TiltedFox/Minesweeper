@@ -76,6 +76,7 @@ public:
 private:
   Graph_lib::Vector_ref<Graph_lib::Line> lines;
   Graph_lib::Vector_ref<Graph_lib::Rectangle> marks;
+  Graph_lib::Text win_text;
   Graph_lib::Text lose_text;
   Graph_lib::Rectangle rec;
   Graph_lib::Vector_ref<CellButton> cells;
@@ -83,6 +84,7 @@ private:
   minesweeper::game_logic::Field field;
   Graph_lib::Button quit;
   void attach_lose_state();
+  void attach_win_state();
   void init_buttons();
   void update();
   void attach_all_from_field();

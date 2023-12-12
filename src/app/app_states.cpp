@@ -149,7 +149,9 @@ Game::Game(App *app, minesweeper::game_logic::Settings settings)
              app.set_state(new Main_menu(&app));
            }},
       rec{Graph_lib::Point(350, 150), Graph_lib::Point(750, 450)},
-      lose_text{Graph_lib::Point(500,20), "you are dick"}
+      lose_text{Graph_lib::Point(500,20), "you are dick"},
+      win_text{Graph_lib::Point(500,20), "master !!!!!"}
+
 
 {
   int size = settings.count_rows < settings.count_columns
@@ -204,6 +206,7 @@ void Game::exit() {
   dettach_all_lines();
   app->detach(quit);
   app->detach(lose_text);
+  app->detach(win_text);
 }
 
 void Game::on_RMB_click(CellButton *btn) {
@@ -236,8 +239,9 @@ void Game::on_click(CellButton *btn) {
       dettach_all_cells();
       open_all_number();
       attach_lose_state();
-      quit.hide();
-      quit.show();
+    }
+    if (field.is_win()){
+      attach_win_state();
     }
   }
   }
@@ -254,6 +258,13 @@ void Game::attach_lose_state() {
   app->attach(quit);
   lose_text.set_font_size(30);
   app->attach(lose_text);
+}
+
+void Game::attach_win_state() {
+  // rec.set_fill_color(Graph_lib::Color::red);
+  app->attach(quit);
+  win_text.set_font_size(30);
+  app->attach(win_text);
 }
 
 void Game::attach_all_from_field() {
@@ -284,6 +295,7 @@ void Game::attach_number_from_field() {
   for (int i = 0; i < r; i++) {
     for (int j = 0; j < c; j++) {
       std::string val = std::to_string(field.get()[i][j].count_bomb);
+      
       if (val == "9") {
         val = "*";
       }
@@ -295,6 +307,37 @@ void Game::attach_number_from_field() {
           new Graph_lib::Text(Graph_lib::Point{320 + j * (500 / size),
                                                80 + (r - 1 - i) * (500 / size)},
                               val));
+      Numbers[Numbers.size() - 1].set_font_size(20);
+      switch (atoi(val.c_str()))
+      {
+      case 1:
+        Numbers[Numbers.size() - 1].set_color(Graph_lib::Color::blue);
+        break;
+      case 2:
+        Numbers[Numbers.size() - 1].set_color(Graph_lib::Color::dark_blue);
+        break;
+      case 3:
+        Numbers[Numbers.size() - 1].set_color(Graph_lib::Color::green);
+        break;
+      case 4:
+        Numbers[Numbers.size() - 1].set_color(Graph_lib::Color::dark_green);
+        break;
+      case 5:
+        Numbers[Numbers.size() - 1].set_color(Graph_lib::Color::yellow);
+        break;
+      case 6:
+        Numbers[Numbers.size() - 1].set_color(Graph_lib::Color::dark_yellow);
+        break;
+      case 7:
+        Numbers[Numbers.size() - 1].set_color(Graph_lib::Color::red);                
+        break;
+
+      case 8:
+        Numbers[Numbers.size() - 1].set_color(Graph_lib::Color::dark_red);
+        break;
+      default:
+        break;
+      }
     }
   }
   // Numbers.push_back(new Graph_lib::Text( Graph_lib::Point{400,200},
