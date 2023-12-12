@@ -50,10 +50,13 @@ public:
   bool is_bomb(IndexPair cell);
   bool is_open(IndexPair cell);
   bool is_marked(IndexPair cell);
+  bool is_win();
 
   const field_matrix_t &get() { return field; };
 
 private:
+  int count_open_sells;
+
   Settings settings = kMedium;
   field_matrix_t field;
 
