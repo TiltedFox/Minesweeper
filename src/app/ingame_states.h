@@ -11,77 +11,54 @@ namespace websocket = beast::websocket; // from <boost/beast/websocket.hpp>
 namespace asio = boost::asio;           // from <boost/asio.hpp>
 using tcp = boost::asio::ip::tcp;
 
-class Multiplayer_game_server : public AppState {
-public:
-  Multiplayer_game_server(App *app);
+const unsigned int PORT = 25566;
 
-  void enter() override { app->attach(test_button); };
-  void exit() override { app->detach(test_button); };
+enum class MP_game_type { host, client };
 
-  Graph_lib::Button test_button;
+struct Multiplayer_args {
+  std::string address = "";
+  minesweeper::game_logic::Settings settings{0, 0, 0};
 
-  void on_accept(beast::error_code ec, tcp::socket socket);
-  void on_handshake(beast::error_code ec);
-  void on_read(beast::error_code ec, std::size_t bytes_transferred);
-
-  // void timer_print() {
-  //   std::cout << "Timer ticked\n";
-  //   t.expires_at(t.expiry() + asio::chrono::seconds(5));
-  //   t.async_wait(boost::bind(&Multiplayer_game_server::timer_print, this));
-  // }
-  // asio::steady_timer t{ioc, asio::chrono::seconds(5)};
-
-  asio::io_context ioc;
-  asio::ip::address address = asio::ip::make_address("127.0.0.1");
-  tcp::acceptor acceptor = tcp::acceptor(ioc, tcp::endpoint(address, 25566));
-  std::unique_ptr<websocket::stream<beast::tcp_stream>> ws_p;
-  // boost::thread thread;
-  std::thread thread;
-  beast::flat_buffer buffer;
+  Multiplayer_args(std::string addr) : address{addr} {};
+  Multiplayer_args(minesweeper::game_logic::Settings settings)
+      : settings{settings} {};
 };
 
-class Multiplayer_game_client : public AppState {
+class Multiplayer_ingame : public AppState {
 public:
-  Multiplayer_game_client(App *app);
+  Multiplayer_ingame(App *app, MP_game_type game_type, Multiplayer_args args);
 
-  void enter() override {
-    app->attach(test_button);
-    app->attach(input_box);
-    app->attach(send_button);
-  };
-  void exit() override {
-    app->detach(test_button);
-    app->detach(input_box);
-    app->detach(send_button);
-  };
+  void enter() override;
+  void exit() override;
 
-  Graph_lib::Button test_button;
   Graph_lib::In_box input_box;
+  Graph_lib::Out_box output_box;
   Graph_lib::Button send_button;
 
+  minesweeper::game_logic::Settings settings;
+
+  MP_game_type game_type;
+
+  std::string get_local_ip();
+
+  // server
+  void on_accept(beast::error_code ec, tcp::socket socket);
+  // client
   void on_resolve(beast::error_code ec, tcp::resolver::results_type results);
   void on_connect(beast::error_code ec,
                   tcp::resolver::results_type::endpoint_type ep);
+  // common
   void on_handshake(beast::error_code ec);
   void on_write(beast::error_code ec, std::size_t bytes_transferred);
-
-  // void timer_print() {
-  //   std::cout << "Timer ticked\n";
-  //   t.expires_at(t.expiry() + asio::chrono::seconds(5));
-  //   t.async_wait(boost::bind(&Multiplayer_game_server::timer_print,
-  //   this));
-  // }
-  // asio::steady_timer t{ioc, asio::chrono::seconds(5)};
+  void on_read(beast::error_code ec, std::size_t bytes_transferred);
 
   asio::io_context ioc;
-  asio::ip::address address = asio::ip::make_address("127.0.0.1");
-  tcp::resolver resolver{ioc};
-  // tcp::socket socket = tcp::socket(ioc);
-  websocket::stream<beast::tcp_stream> ws{ioc};
-  // boost::thread thread;
+  std::string address;
+  tcp::resolver resolver;
+  tcp::acceptor acceptor;
+  std::unique_ptr<websocket::stream<beast::tcp_stream>> ws_p;
   std::thread thread;
-  asio::executor_work_guard<asio::io_context::executor_type> work_guard =
-      asio::make_work_guard(ioc);
+  beast::flat_buffer read_buffer;
 };
 
 } // namespace minesweeper::app

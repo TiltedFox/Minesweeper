@@ -152,12 +152,17 @@ Test::Test(App *app)
       mp_client_button({200, 200}, 100, 50, "Client",
                        [](Graph_lib::Address, Graph_lib::Address button_addr) {
                          App &app = get_app_ref(button_addr);
-                         app.set_state(new Multiplayer_game_client{&app});
+                         app.set_state(new Multiplayer_ingame{
+                             &app, MP_game_type::client,
+                             Multiplayer_args(std::string("192.168.0.105"))});
                        }),
-      mp_server_button({400, 200}, 100, 50, "Server",
-                       [](Graph_lib::Address, Graph_lib::Address button_addr) {
-                         App &app = get_app_ref(button_addr);
-                         app.set_state(new Multiplayer_game_server{&app});
-                       }){};
+      mp_server_button(
+          {400, 200}, 100, 50, "Server",
+          [](Graph_lib::Address, Graph_lib::Address button_addr) {
+            App &app = get_app_ref(button_addr);
+            app.set_state(new Multiplayer_ingame{
+                &app, MP_game_type::host,
+                Multiplayer_args(minesweeper::game_logic::kMedium)});
+          }){};
 
 } // namespace minesweeper::app
