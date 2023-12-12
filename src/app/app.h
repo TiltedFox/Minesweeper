@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <thread>
 
 // don't move below graph lib unless you want an error
 #include <boost/asio.hpp>
@@ -10,9 +11,9 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/bind/bind.hpp>
-#include <boost/thread/thread.hpp>
-
-#include <boost/chrono.hpp>
+#include <boost/json.hpp>
+// #include <boost/thread/thread.hpp>
+// #include <boost/chrono.hpp>
 
 #include <Graph_lib/GUI.h>
 #include <Graph_lib/Window.h>

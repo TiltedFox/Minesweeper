@@ -1,5 +1,5 @@
 set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost COMPONENTS thread)
+find_package(Boost COMPONENTS json)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -17,6 +17,8 @@ add_library(app
     ${APP_DIR}/app.cpp
     ${APP_DIR}/app_states.h
     ${APP_DIR}/app_states.cpp
+    ${APP_DIR}/ingame_states.h
+    ${APP_DIR}/ingame_states.cpp
 )
 if(WIN32)
   target_link_libraries(app
