@@ -49,50 +49,54 @@ void Main_menu::exit() {
 
 Singleplayer_menu::Singleplayer_menu(App *app)
     : AppState{app},
-      easy_dif{Graph_lib::Point{app->x_max() / 5, app->y_max() / 3},
-               app->x_max() / 5, app->y_max() / 10, "Easy",
+      easy_dif{Graph_lib::Point{app->x_max() * 3 / 14, app->y_max() / 3},
+               app->x_max() / 7, app->y_max() / 10, "Easy",
                [](Graph_lib::Address, Graph_lib::Address button_addr) {
                  App &app = get_app_ref(button_addr);
                  app.set_state(new Game{&app, minesweeper::game_logic::kEasy});
                }},
       medium_dif{
-          Graph_lib::Point{app->x_max() / 5, app->y_max() / 2},
-          app->x_max() / 5, app->y_max() / 10, "Medium",
+          Graph_lib::Point{app->x_max() * 3 / 7, app->y_max() / 3},
+          app->x_max() / 7, app->y_max() / 10, "Medium",
           [](Graph_lib::Address, Graph_lib::Address button_addr) {
             App &app = get_app_ref(button_addr);
             app.set_state(new Game{&app, minesweeper::game_logic::kMedium});
           }},
-      hard_dif{Graph_lib::Point{app->x_max() / 5, app->y_max() * 2 / 3},
-               app->x_max() / 5, app->y_max() / 10, "Hard",
+      hard_dif{Graph_lib::Point{app->x_max() * 9 / 14, app->y_max() / 3},
+               app->x_max() / 7, app->y_max() / 10, "Hard",
                [](Graph_lib::Address, Graph_lib::Address button_addr) {
                  App &app = get_app_ref(button_addr);
                  app.set_state(new Game{&app, minesweeper::game_logic::kHard});
                }},
-      custom_dif{Graph_lib::Point{app->x_max() * 3 / 5, app->y_max() / 3},
-                 app->x_max() / 5, app->y_max() / 10, "Custom",
-                 [](Graph_lib::Address, Graph_lib::Address button_addr) {
-                   App &app = get_app_ref(button_addr);
-                   Singleplayer_menu &menu =
-                       dynamic_cast<Singleplayer_menu &>(app.get_state());
-                   app.set_state(
-                       new Game{&app, minesweeper::game_logic::Settings{
-                                          menu.area_box.get_int(),
-                                          menu.area_box.get_int(),
-                                          menu.mines_box.get_int()}});
-                 }},
-      area_box{Graph_lib::Point{app->x_max() * 3 / 5, app->y_max() / 2},
-               app->x_max() / 5, app->y_max() / 10, "Area"},
-      mines_box{Graph_lib::Point{app->x_max() * 3 / 5, app->y_max() * 2 / 3},
-                app->x_max() / 5, app->y_max() / 10, "Mines"},
-      start_game_button{
-          Graph_lib::Point{(app->x_max() - app->x_max() / 4) / 2,
-                           app->y_max() * 5 / 6},
-          app->x_max() / 4, app->y_max() / 10, "Start game",
+      custom_dif{
+          Graph_lib::Point{app->x_max() * 3 / 14, app->y_max() * 4 / 7},
+          app->x_max() / 7, app->y_max() / 10, "Custom",
           [](Graph_lib::Address, Graph_lib::Address button_addr) {
             App &app = get_app_ref(button_addr);
-            app.set_state(
-                new Game{&app, minesweeper::game_logic::Settings{10, 10, 30}});
-          }} {};
+            Singleplayer_menu &menu =
+                dynamic_cast<Singleplayer_menu &>(app.get_state());
+            if (menu.area_box.get_int() > 20) {
+            } else if (menu.mines_box.get_int() >
+                       menu.area_box.get_int() * menu.area_box.get_int() / 2) {
+            } else
+              app.set_state(new Game{&app, minesweeper::game_logic::Settings{
+                                               menu.area_box.get_int(),
+                                               menu.area_box.get_int(),
+                                               menu.mines_box.get_int()}});
+          }},
+      area_box{Graph_lib::Point{app->x_max() * 3 / 7, app->y_max() * 4 / 7},
+               app->x_max() / 7, app->y_max() / 10, "Area"},
+      mines_box{Graph_lib::Point{app->x_max() * 9 / 14, app->y_max() * 4 / 7},
+                app->x_max() / 7, app->y_max() / 10, "Mines"},
+      input_condition{Graph_lib::Point{app->x_max() / 3, app->y_max() * 3 / 4},
+                      "Area must be <20 and mines < 2/3 * area"},
+      back{Graph_lib::Point{(app->x_max() - app->x_max() / 4) / 2,
+                            app->y_max() * 5 / 6},
+           app->x_max() / 4, app->y_max() / 10, "Back",
+           [](Graph_lib::Address, Graph_lib::Address button_addr) {
+             App &app = get_app_ref(button_addr);
+             app.set_state(new Main_menu{&app});
+           }} {};
 
 void Singleplayer_menu::enter() {
   app->attach(easy_dif);
@@ -101,7 +105,9 @@ void Singleplayer_menu::enter() {
   app->attach(custom_dif);
   app->attach(area_box);
   app->attach(mines_box);
-  app->attach(start_game_button);
+  app->attach(input_condition);
+  input_condition.set_font_size(20);
+  app->attach(back);
 }
 
 void Singleplayer_menu::exit() {
@@ -111,10 +117,47 @@ void Singleplayer_menu::exit() {
   app->detach(custom_dif);
   app->detach(area_box);
   app->detach(mines_box);
-  app->detach(start_game_button);
+  app->detach(input_condition);
+  app->detach(back);
 }
 
 Multiplayer_menu::Multiplayer_menu(App *app)
+    : AppState(app),
+      client{Graph_lib::Point{(app->x_max() - app->x_max() / 4) / 2,
+                              app->y_max() / 2},
+             app->x_max() / 4, app->y_max() / 10, "Join",
+             [](Graph_lib::Address, Graph_lib::Address button_addr) {
+               App &app = get_app_ref(button_addr);
+               app.set_state(new MP_client_menu{&app});
+             }},
+      host{Graph_lib::Point{(app->x_max() - app->x_max() / 4) / 2,
+                            app->y_max() * 2 / 3},
+           app->x_max() / 4, app->y_max() / 10, "Host",
+           [](Graph_lib::Address, Graph_lib::Address button_addr) {
+             App &app = get_app_ref(button_addr);
+             app.set_state(new MP_host_menu{&app});
+           }},
+      back{Graph_lib::Point{(app->x_max() - app->x_max() / 4) / 2,
+                            app->y_max() * 5 / 6},
+           app->x_max() / 4, app->y_max() / 10, "Back",
+           [](Graph_lib::Address, Graph_lib::Address button_addr) {
+             App &app = get_app_ref(button_addr);
+             app.set_state(new Main_menu{&app});
+           }} {};
+
+void Multiplayer_menu::enter() {
+  app->attach(client);
+  app->attach(host);
+  app->attach(back);
+}
+
+void Multiplayer_menu::exit() {
+  app->detach(client);
+  app->detach(host);
+  app->detach(back);
+}
+
+MP_client_menu::MP_client_menu(App *app)
     : AppState(app),
       ip_box{Graph_lib::Point{(app->x_max() - app->x_max() / 4) / 2,
                               app->y_max() * 2 / 3},
@@ -122,34 +165,131 @@ Multiplayer_menu::Multiplayer_menu(App *app)
       start_game_button{
           Graph_lib::Point{(app->x_max() - app->x_max() / 4) / 2,
                            app->y_max() * 5 / 6},
-          app->x_max() / 4, app->y_max() / 10, "Start game",
+          app->x_max() / 4, app->y_max() / 10, "Connect",
           [](Graph_lib::Address, Graph_lib::Address button_addr) {
             App &app = get_app_ref(button_addr);
             app.set_state(new Game{&app, minesweeper::game_logic::kEasy});
-          }} {};
+          }},
+      back{Graph_lib::Point{(app->x_max() - app->x_max() / 4) / 2,
+                            app->y_max() * 5 / 6},
+           app->x_max() / 4, app->y_max() / 10, "Back",
+           [](Graph_lib::Address, Graph_lib::Address button_addr) {
+             App &app = get_app_ref(button_addr);
+             app.set_state(new Multiplayer_menu{&app});
+           }} {};
 
-void Multiplayer_menu::enter() {
+void MP_client_menu::enter() {
   app->attach(ip_box);
   app->attach(start_game_button);
+  app->attach(back);
 }
 
-void Multiplayer_menu::exit() {
+void MP_client_menu::exit() {
   app->detach(ip_box);
   app->detach(start_game_button);
+  app->detach(back);
 }
+
+MP_host_menu::MP_host_menu(App *app)
+    : AppState(app),
+      easy_dif{Graph_lib::Point{app->x_max() * 3 / 14, app->y_max() / 3},
+               app->x_max() / 7, app->y_max() / 10, "Easy",
+               [](Graph_lib::Address, Graph_lib::Address button_addr) {
+                 App &app = get_app_ref(button_addr);
+                 app.set_state(new Game{&app, minesweeper::game_logic::kEasy});
+               }},
+      medium_dif{
+          Graph_lib::Point{app->x_max() * 3 / 7, app->y_max() / 3},
+          app->x_max() / 7, app->y_max() / 10, "Medium",
+          [](Graph_lib::Address, Graph_lib::Address button_addr) {
+            App &app = get_app_ref(button_addr);
+            app.set_state(new Game{&app, minesweeper::game_logic::kMedium});
+          }},
+      hard_dif{Graph_lib::Point{app->x_max() * 9 / 14, app->y_max() / 3},
+               app->x_max() / 7, app->y_max() / 10, "Hard",
+               [](Graph_lib::Address, Graph_lib::Address button_addr) {
+                 App &app = get_app_ref(button_addr);
+                 app.set_state(new Game{&app, minesweeper::game_logic::kHard});
+               }},
+      custom_dif{
+          Graph_lib::Point{app->x_max() * 3 / 14, app->y_max() * 4 / 7},
+          app->x_max() / 7, app->y_max() / 10, "Custom",
+          [](Graph_lib::Address, Graph_lib::Address button_addr) {
+            App &app = get_app_ref(button_addr);
+            MP_host_menu &menu = dynamic_cast<MP_host_menu &>(app.get_state());
+            if (menu.area_box.get_int() > 20) {
+            } else if (menu.mines_box.get_int() >
+                       menu.area_box.get_int() * menu.area_box.get_int() / 2) {
+            } else
+              app.set_state(new Game{&app, minesweeper::game_logic::Settings{
+                                               menu.area_box.get_int(),
+                                               menu.area_box.get_int(),
+                                               menu.mines_box.get_int()}});
+          }},
+      area_box{Graph_lib::Point{app->x_max() * 3 / 7, app->y_max() * 4 / 7},
+               app->x_max() / 7, app->y_max() / 10, "Area"},
+      mines_box{Graph_lib::Point{app->x_max() * 9 / 14, app->y_max() * 4 / 7},
+                app->x_max() / 7, app->y_max() / 10, "Mines"},
+      input_condition{Graph_lib::Point{app->x_max() / 3, app->y_max() * 3 / 4},
+                      "Area must be < 20 and mines < 2/3 * area"},
+      back{Graph_lib::Point{(app->x_max() - app->x_max() / 4) / 2,
+                            app->y_max() * 5 / 6},
+           app->x_max() / 4, app->y_max() / 10, "Back",
+           [](Graph_lib::Address, Graph_lib::Address button_addr) {
+             App &app = get_app_ref(button_addr);
+             app.set_state(new Multiplayer_menu{&app});
+           }} {};
+
+void MP_host_menu::enter() {
+  app->attach(easy_dif);
+  app->attach(medium_dif);
+  app->attach(hard_dif);
+  app->attach(custom_dif);
+  app->attach(area_box);
+  app->attach(mines_box);
+  app->attach(input_condition);
+  input_condition.set_font_size(20);
+  app->attach(back);
+}
+
+void MP_host_menu::exit() {
+  app->detach(easy_dif);
+  app->detach(medium_dif);
+  app->detach(hard_dif);
+  app->detach(custom_dif);
+  app->detach(area_box);
+  app->detach(mines_box);
+  app->detach(input_condition);
+  app->detach(back);
+}
+
+CellButton::CellButton(Graph_lib::Point xy, Graph_lib::Callback cb, int r,
+                       int c, int r_count, int c_count)
+    : Button(xy, (500 / r_count), (500 / c_count), "", cb), row{r}, column{c} {}
+
+void CellButton::attach(Graph_lib::Window &win) { Button::attach(win); }
 
 Game::Game(App *app, minesweeper::game_logic::Settings settings)
     : AppState{app}, field{settings},
-      quit{Graph_lib::Point{(app->x_max() - app->x_max() / 4) / 2,
-                            app->y_max() * 7 / 8},
-           app->x_max() / 4, app->y_max() / 10, "Quit",
+      quit{Graph_lib::Point{app->x_max() * 8 / 10, app->y_max() * 5 / 6},
+           app->x_max() / 8, app->y_max() / 10, "Quit",
            [](Graph_lib::Address, Graph_lib::Address button_addr) {
              App &app = get_app_ref(button_addr);
              app.set_state(new Main_menu(&app));
            }},
+      // restart{Graph_lib::Point{app->x_max() * 8 / 10, app->y_max() * 4 / 6},
+      //         app->x_max() / 8, app->y_max() / 10, "Restart",
+      //         [](Graph_lib::Address, Graph_lib::Address button_addr) {
+      //           App &app = get_app_ref(button_addr);
+      //           Game &game = dynamic_cast<Game &>(app.get_state());
+      //           app.set_state(new Game{&app,
+      //           minesweeper::game_logic::Settings{app.}});     DOESN'T WORK
+      //         }},
       rec{Graph_lib::Point(350, 150), Graph_lib::Point(750, 450)},
-      lose_text{Graph_lib::Point(500, 20), "you are dick"},
-      win_text{Graph_lib::Point(500, 20), "master !!!!!"}
+      lose_text{Graph_lib::Point{app->x_max() * 8 / 10, app->y_max() / 5},
+                "You lost("},
+      win_text{Graph_lib::Point{app->x_max() * 8 / 10, app->y_max() / 5},
+               "You win!"}
 
 {
   int size = settings.count_rows < settings.count_columns
@@ -178,16 +318,16 @@ Game::Game(App *app, minesweeper::game_logic::Settings settings)
           Graph_lib::Point{300 + (j + 1) * (500 / size),
                            50 + (settings.count_rows - i) * (500 / size)}});
     }
-  for (int i = 0; i <= settings.count_rows; ++i) {
-    lines.push_back(
-        new Graph_lib::Line{Graph_lib::Point{300 + i * (500 / size), 50},
-                            Graph_lib::Point{300 + i * (500 / size), 545}});
-  }
-  for (int i = 0; i <= settings.count_rows; ++i) {
-    lines.push_back(
-        new Graph_lib::Line{Graph_lib::Point{300, 50 + i * (500 / size)},
-                            Graph_lib::Point{795, 50 + i * (500 / size)}});
-  }
+  // for (int i = 0; i <= settings.count_rows; ++i) {
+  //   lines.push_back(
+  //       new Graph_lib::Line{Graph_lib::Point{300 + i * (500 / size), 50},
+  //                           Graph_lib::Point{300 + i * (500 / size), 545}});
+  // }
+  // for (int i = 0; i <= settings.count_rows; ++i) {
+  //   lines.push_back(
+  //       new Graph_lib::Line{Graph_lib::Point{300, 50 + i * (500 / size)},
+  //                           Graph_lib::Point{795, 50 + i * (500 / size)}});
+  // }
 }
 
 void Game::enter() {
@@ -197,6 +337,7 @@ void Game::enter() {
   for (int i = 0; i < lines.size(); i++) {
     app->attach(lines[i]);
   }
+  app->attach(quit);
 }
 
 void Game::exit() {

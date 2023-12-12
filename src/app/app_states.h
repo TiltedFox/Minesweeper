@@ -7,7 +7,7 @@ namespace minesweeper::app {
 
 class Main_menu;
 class Singleplayer_menu;
-class Multiplayer_menu;
+class MP_client_menu;
 
 class Main_menu : public AppState {
 public:
@@ -17,8 +17,8 @@ public:
   void exit() override;
 
 private:
-  Graph_lib::Button singleplayer_button;
-  Graph_lib::Button multiplayer_button;
+  Graph_lib::Button singleplayer_button; // Main menu
+  Graph_lib::Button multiplayer_button;  // Buttons to navigate further
   Graph_lib::Button quit;
   Graph_lib::Text header;
 };
@@ -30,6 +30,8 @@ public:
   void enter() override;
   void exit() override;
 
+  void error_attach();
+
 private:
   Graph_lib::Button easy_dif;   // Singleplayer menu,
   Graph_lib::Button medium_dif; // Buttons and boxes for choosing difficulty
@@ -37,7 +39,8 @@ private:
   Graph_lib::Button custom_dif;
   Graph_lib::In_box area_box;
   Graph_lib::In_box mines_box;
-  Graph_lib::Button start_game_button;
+  Graph_lib::Text input_condition;
+  Graph_lib::Button back;
 };
 
 class Multiplayer_menu : public AppState {
@@ -48,8 +51,41 @@ public:
   void exit() override;
 
 private:
-  Graph_lib::In_box ip_box;
-  Graph_lib::Button start_game_button;
+  Graph_lib::Button client; // Multiplayer client menu
+  Graph_lib::Button host;   // Buttons and boxes for connecting to host
+  Graph_lib::Button back;
+};
+
+class MP_client_menu : public AppState {
+public:
+  MP_client_menu(App *app);
+
+  void enter() override;
+  void exit() override;
+
+private:
+  Graph_lib::In_box ip_box; // Multiplayer client menu
+  Graph_lib::Button
+      start_game_button; // Buttons and boxes for connecting to host
+  Graph_lib::Button back;
+};
+
+class MP_host_menu : public AppState {
+public:
+  MP_host_menu(App *app);
+
+  void enter() override;
+  void exit() override;
+
+private:
+  Graph_lib::Button easy_dif;   // Multiplayer host menu,
+  Graph_lib::Button medium_dif; // Buttons and boxes for choosing difficulty
+  Graph_lib::Button hard_dif;
+  Graph_lib::Button custom_dif;
+  Graph_lib::In_box area_box;
+  Graph_lib::In_box mines_box;
+  Graph_lib::Text input_condition;
+  Graph_lib::Button back;
 };
 
 struct CellButton : Graph_lib::Button {
@@ -82,7 +118,9 @@ private:
   Graph_lib::Vector_ref<CellButton> cells;
   Graph_lib::Vector_ref<Graph_lib::Text> Numbers;
   minesweeper::game_logic::Field field;
+  // Graph_lib::Button restart;  OPTIONAL
   Graph_lib::Button quit;
+
   void attach_lose_state();
   void attach_win_state();
   void init_buttons();
