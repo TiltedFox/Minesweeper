@@ -141,9 +141,6 @@ void Multiplayer_menu::exit() {
 
 // void Game_menu::enter() { app->attach(test_text); }
 
-<<<<<<< HEAD
-// void Game_menu::exit() { app->detach(test_text); }
-=======
 Game::Game(App *app, minesweeper::game_logic::Settings settings)
     : AppState{app}, field{settings},
       quit{Graph_lib::Point{(app->x_max() - app->x_max() / 4) / 2,
@@ -154,14 +151,13 @@ Game::Game(App *app, minesweeper::game_logic::Settings settings)
              app.set_state(new Main_menu(&app));
            }},
       rec{Graph_lib::Point(350, 150), Graph_lib::Point(750, 450)},
-      lose_text{Graph_lib::Point(500,20), "you are dick"},
-      win_text{Graph_lib::Point(500,20), "master !!!!!"}
-
+      lose_text{Graph_lib::Point(500, 20), "you are dick"},
+      win_text{Graph_lib::Point(500, 20), "master !!!!!"}
 
 {
   int size = settings.count_rows < settings.count_columns
-  ? settings.count_rows
-  : settings.count_columns;
+                 ? settings.count_rows
+                 : settings.count_columns;
   for (int i = 0; i < settings.count_rows; ++i)
     for (int j = 0; j < settings.count_columns; ++j) {
       cells.push_back(new CellButton{
@@ -172,26 +168,28 @@ Game::Game(App *app, minesweeper::game_logic::Settings settings)
             App &app = get_app_ref(button_addr);
             Game &game = dynamic_cast<Game &>(app.get_state());
             Graph_lib::Button &button = get_button_ref(button_addr);
-            if (button.is_RMB_click()){
+            if (button.is_RMB_click()) {
               game.on_RMB_click(widget_p);
-            }
-            else{
+            } else {
               game.on_click(widget_p);
             }
-            
           },
           i, j, settings.count_rows, settings.count_columns});
-          marks.push_back(new Graph_lib::Rectangle{
-            Graph_lib::Point{300 + j * (500 / size),
-                            50 + (settings.count_rows - 1 - i) * (500 / size)},
-                            Graph_lib::Point{300 + (j+1) * (500 / size), 50 + (settings.count_rows - i) * (500 / size)}
-          });
+      marks.push_back(new Graph_lib::Rectangle{
+          Graph_lib::Point{300 + j * (500 / size),
+                           50 + (settings.count_rows - 1 - i) * (500 / size)},
+          Graph_lib::Point{300 + (j + 1) * (500 / size),
+                           50 + (settings.count_rows - i) * (500 / size)}});
     }
-  for (int i = 0; i <= settings.count_rows; ++i){
-    lines.push_back(new Graph_lib::Line{Graph_lib::Point{300 + i * (500 / size), 50}, Graph_lib::Point{300 + i * (500 / size), 545}});
+  for (int i = 0; i <= settings.count_rows; ++i) {
+    lines.push_back(
+        new Graph_lib::Line{Graph_lib::Point{300 + i * (500 / size), 50},
+                            Graph_lib::Point{300 + i * (500 / size), 545}});
   }
-  for (int i = 0; i <= settings.count_rows; ++i){
-    lines.push_back(new Graph_lib::Line{Graph_lib::Point{300, 50 + i * (500 / size)}, Graph_lib::Point{795,50 + i * (500 / size)}});
+  for (int i = 0; i <= settings.count_rows; ++i) {
+    lines.push_back(
+        new Graph_lib::Line{Graph_lib::Point{300, 50 + i * (500 / size)},
+                            Graph_lib::Point{795, 50 + i * (500 / size)}});
   }
 }
 
@@ -199,13 +197,13 @@ void Game::enter() {
   for (int i = 0; i < cells.size(); i++) {
     app->attach(cells[i]);
   }
-  for (int i = 0; i < lines.size(); i ++){
-    app -> attach(lines[i]);
+  for (int i = 0; i < lines.size(); i++) {
+    app->attach(lines[i]);
   }
 }
 
-void Game::exit() { 
-  dettach_all_cells(); 
+void Game::exit() {
+  dettach_all_cells();
   dettach_all_number();
   dettach_all_marks();
   dettach_all_lines();
@@ -235,7 +233,7 @@ void Game::on_click(CellButton *btn) {
     field.generate_field(cell);
     attach_number_from_field();
   }
-  if (!field.is_marked(cell)){
+  if (!field.is_marked(cell)) {
     field.open_cell(cell);
 
     this->update();
@@ -245,12 +243,11 @@ void Game::on_click(CellButton *btn) {
       open_all_number();
       attach_lose_state();
     }
-    if (field.is_win()){
+    if (field.is_win()) {
       attach_win_state();
     }
   }
-  }
-  
+}
 
 void Game::update() {
   dettach_all_cells();
@@ -274,15 +271,14 @@ void Game::attach_win_state() {
 
 void Game::attach_all_from_field() {
   for (int i = 0; i < cells.size(); i++) {
-    
-    if (!field.is_open(cells[i].get_index())){
-        if (field.is_marked(cells[i].get_index())){
-          marks[i].set_fill_color(Graph_lib::Color::red);
-          app->attach(marks[i]);
-        }
-        app->attach(cells[i]);
-    }
-    else
+
+    if (!field.is_open(cells[i].get_index())) {
+      if (field.is_marked(cells[i].get_index())) {
+        marks[i].set_fill_color(Graph_lib::Color::red);
+        app->attach(marks[i]);
+      }
+      app->attach(cells[i]);
+    } else
       app->attach(Numbers[i]);
     // if
     // (field.get().at(cells[i].get_index().row).at(cells[i].get_index().column).count_bomb
@@ -300,7 +296,7 @@ void Game::attach_number_from_field() {
   for (int i = 0; i < r; i++) {
     for (int j = 0; j < c; j++) {
       std::string val = std::to_string(field.get()[i][j].count_bomb);
-      
+
       if (val == "9") {
         val = "*";
       }
@@ -313,8 +309,7 @@ void Game::attach_number_from_field() {
                                                80 + (r - 1 - i) * (500 / size)},
                               val));
       Numbers[Numbers.size() - 1].set_font_size(20);
-      switch (atoi(val.c_str()))
-      {
+      switch (atoi(val.c_str())) {
       case 1:
         Numbers[Numbers.size() - 1].set_color(Graph_lib::Color::blue);
         break;
@@ -334,7 +329,7 @@ void Game::attach_number_from_field() {
         Numbers[Numbers.size() - 1].set_color(Graph_lib::Color::dark_yellow);
         break;
       case 7:
-        Numbers[Numbers.size() - 1].set_color(Graph_lib::Color::red);                
+        Numbers[Numbers.size() - 1].set_color(Graph_lib::Color::red);
         break;
 
       case 8:
@@ -355,7 +350,7 @@ void Game::open_all_number() {
 }
 void Game::dettach_all_lines() {
   for (int i = 0; i < lines.size(); i++) {
-    app -> detach(lines[i]);
+    app->detach(lines[i]);
   }
 }
 
@@ -370,10 +365,9 @@ void Game::dettach_all_marks() {
   }
 }
 void Game::dettach_all_number() {
-  for (int i = 0; i < Numbers.size(); i ++){
+  for (int i = 0; i < Numbers.size(); i++) {
     app->detach(Numbers[i]);
   }
 }
 
->>>>>>> dev
 } // namespace minesweeper::app
