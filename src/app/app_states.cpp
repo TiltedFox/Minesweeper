@@ -72,8 +72,13 @@ Singleplayer_menu::Singleplayer_menu(App *app)
                  app->x_max() / 5, app->y_max() / 10, "Custom",
                  [](Graph_lib::Address, Graph_lib::Address button_addr) {
                    App &app = get_app_ref(button_addr);
-                   app.set_state(new Game{
-                       &app, minesweeper::game_logic::Settings{10, 10, 30}});
+                   Singleplayer_menu &menu =
+                       dynamic_cast<Singleplayer_menu &>(app.get_state());
+                   app.set_state(
+                       new Game{&app, minesweeper::game_logic::Settings{
+                                          menu.area_box.get_int(),
+                                          menu.area_box.get_int(),
+                                          menu.mines_box.get_int()}});
                  }},
       area_box{Graph_lib::Point{app->x_max() * 3 / 5, app->y_max() / 2},
                app->x_max() / 5, app->y_max() / 10, "Area"},
@@ -132,14 +137,6 @@ void Multiplayer_menu::exit() {
   app->detach(ip_box);
   app->detach(start_game_button);
 }
-
-// Game_menu::Game_menu(App *app)
-//     : AppState{app},
-//       test_text{Graph_lib::Point{(app->x_max() - app->x_max() / 4) / 2,
-//                                  app->y_max() / 2},
-//                 "Game menu!"} {};
-
-// void Game_menu::enter() { app->attach(test_text); }
 
 Game::Game(App *app, minesweeper::game_logic::Settings settings)
     : AppState{app}, field{settings},
