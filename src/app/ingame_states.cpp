@@ -5,22 +5,18 @@ namespace minesweeper::app {
 
 Multiplayer_ingame::Multiplayer_ingame(App *app, MP_game_type game_type,
                                        Multiplayer_args args)
-    : AppState(app), game_type{game_type}, address{args.address},
+    : AppState(app), game_type{game_type}, settings{args.settings},
+      address{args.address}, resolver{ioc},
+      acceptor{ioc, tcp::endpoint(tcp::v4(), PORT)},
       input_box({100, 100}, 300, 100, "Sent text"),
       output_box({500, 100}, 300, 100, "Received text"),
-      send_button({200, 200}, 100, 50, "Send the text",
-                  [](Graph_lib::Address, Graph_lib::Address button_addr) {
-                    auto &state_ref = dynamic_cast<Multiplayer_ingame &>(
-                        get_app_ref(button_addr).get_state());
-                    std::string msg = state_ref.input_box.get_string();
-                    if (state_ref.ws_p)
-                      state_ref.ws_p->async_write(
-                          asio::buffer(msg),
-                          beast::bind_front_handler(
-                              &Multiplayer_ingame::on_write, &state_ref));
-                  }),
-      resolver{ioc}, acceptor{ioc, tcp::endpoint(tcp::v4(), PORT)},
-      settings{args.settings} {
+      send_button(
+          {200, 200}, 100, 50, "Send the text",
+          [](Graph_lib::Address, Graph_lib::Address button_addr) {
+            auto &state_ref = get_state_ref<Multiplayer_ingame>(button_addr);
+            state_ref.write_json({{"message", state_ref.input_box.get_string()},
+                                  {"test", "123"}});
+          }) {
   if (game_type == MP_game_type::host) {
     std::cout << get_local_ip() << " awaiting connection\n";
     acceptor.async_accept(
@@ -110,7 +106,15 @@ void Multiplayer_ingame::on_write(beast::error_code ec,
                                   std::size_t bytes_transferred) {
   if (ec)
     std::cerr << ec.message() << "\n";
-  std::cout << "Wrote " << bytes_transferred << "bytes\n";
+  std::cout << "Wrote " << bytes_transferred << " bytes\n";
+}
+
+void Multiplayer_ingame::write_json(json::value val) {
+  if (!ws_p)
+    std::cerr << "Attempted write with no socket open\n";
+  ws_p->async_write(
+      asio::buffer(json::serialize(val)),
+      beast::bind_front_handler(&Multiplayer_ingame::on_write, this));
 }
 
 void Multiplayer_ingame::enter() {

@@ -57,5 +57,10 @@ inline Graph_lib::Button &get_button_ref(Graph_lib::Address button_address) {
   return *static_cast<Graph_lib::Button *>(button_address);
 }
 
+template <typename T>
+inline T &get_state_ref(Graph_lib::Address button_address) {
+  return dynamic_cast<T &>(get_app_ref(button_address).get_state());
+}
+
 } // namespace minesweeper::app
 #endif // #ifndef GAME_H

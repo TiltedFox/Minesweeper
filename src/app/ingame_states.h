@@ -5,6 +5,7 @@
 
 namespace minesweeper::app {
 
+namespace json = boost::json;           // from <boost/json.hpp>
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
 namespace websocket = beast::websocket; // from <boost/beast/websocket.hpp>
@@ -31,17 +32,12 @@ public:
   void enter() override;
   void exit() override;
 
-  Graph_lib::In_box input_box;
-  Graph_lib::Out_box output_box;
-  Graph_lib::Button send_button;
+  MP_game_type game_type;
 
   minesweeper::game_logic::Settings settings;
 
-  MP_game_type game_type;
-
-  std::string get_local_ip();
-
   // server
+  std::string get_local_ip();
   void on_accept(beast::error_code ec, tcp::socket socket);
   // client
   void on_resolve(beast::error_code ec, tcp::resolver::results_type results);
@@ -52,6 +48,8 @@ public:
   void on_write(beast::error_code ec, std::size_t bytes_transferred);
   void on_read(beast::error_code ec, std::size_t bytes_transferred);
 
+  void write_json(json::value val);
+
   asio::io_context ioc;
   std::string address;
   tcp::resolver resolver;
@@ -59,6 +57,10 @@ public:
   std::unique_ptr<websocket::stream<beast::tcp_stream>> ws_p;
   std::thread thread;
   beast::flat_buffer read_buffer;
+
+  Graph_lib::In_box input_box;
+  Graph_lib::Out_box output_box;
+  Graph_lib::Button send_button;
 };
 
 } // namespace minesweeper::app
