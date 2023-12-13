@@ -62,8 +62,12 @@ public:
   void enter() override;
   void exit() override;
 
+  std::string get_ip() { return ip_box.get_string(); }
+  void set_label(std::string label) { error_text.set_label(label); }
+
 private:
   Graph_lib::In_box ip_box; // Multiplayer client menu
+  Graph_lib::Text error_text;
   Graph_lib::Button
       start_game_button; // Buttons and boxes for connecting to host
   Graph_lib::Button back;

@@ -119,10 +119,10 @@ void Field_widget::cell_interact(game_logic::IndexPair indexes,
     if (field.is_bomb(indexes))
       return end_game(Field_result::lost);
     field.open_cell(indexes);
-    if (field.is_win())
-      return end_game(Field_result::won);
     break;
   }
+  if (field.is_win())
+    return end_game(Field_result::won);
 
   update();
 }
@@ -157,6 +157,63 @@ void Field_widget::end_game(Field_result res) {
     field.open_cell(cells[i].indexes());
   update();
   end_callback(res);
+}
+
+Singleplayer_ingame::Singleplayer_ingame(
+    App *app, minesweeper::game_logic::Settings settings)
+    : AppState(app),
+      field1(app, settings, {app->x_max() * 4 / 24, app->y_max() / 12}, 500,
+             500, Cell_button::callback,
+             std::bind(&Singleplayer_ingame::game_ended, this,
+                       std::placeholders::_1)),
+      quit(Graph_lib::Point{app->x_max() * 17 / 24, app->y_max() * 10 / 12},
+           app->x_max() / 7, app->y_max() / 12, "Quit",
+           [](Graph_lib::Address, Graph_lib::Address button_addr) {
+             App &app = get_app_ref(button_addr);
+             app.set_state(new Main_menu{&app});
+           }),
+      restart(
+          Graph_lib::Point{app->x_max() * 17 / 24, app->y_max() * 8 / 12},
+          app->x_max() / 7, app->y_max() / 12, "Restart",
+          [](Graph_lib::Address, Graph_lib::Address button_addr) {
+            App &app = get_app_ref(button_addr);
+            Singleplayer_ingame &menu =
+                dynamic_cast<Singleplayer_ingame &>(app.get_state());
+            app.set_state(new Singleplayer_ingame{&app, menu.field1.settings});
+          }),
+      win_text(
+          Graph_lib::Point{app->x_max() * 17 / 24 + 48, app->y_max() * 2 / 12},
+          ""),
+      defeat_text(
+          Graph_lib::Point{app->x_max() * 17 / 24 + 17, app->y_max() * 2 / 12},
+          ""){};
+
+void Singleplayer_ingame::enter() {
+  field1.attach();
+  app->attach(quit);
+  app->attach(restart);
+  win_text.set_font_size(30);
+  defeat_text.set_font_size(30);
+  app->attach(win_text);
+  app->attach(defeat_text);
+};
+
+void Singleplayer_ingame::exit() {
+  field1.detach();
+  app->detach(quit);
+  app->detach(restart);
+  app->detach(win_text);
+  app->detach(defeat_text);
+};
+
+void Singleplayer_ingame::game_ended(Field_result res) {
+  if (res == Field_result::won) {
+    std::cout << "WIN\n";
+    win_text.set_label("WIN");
+  } else {
+    std::cout << "DEFEAT!\n";
+    defeat_text.set_label("DEFEAT");
+  }
 }
 
 Multiplayer_ingame::Multiplayer_ingame(App *app, MP_game_type game_type,

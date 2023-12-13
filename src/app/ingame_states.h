@@ -69,59 +69,14 @@ struct Field_widget {
   std::function<void(Field_result)> end_callback;
 };
 
-class Test : public AppState {
+class Singleplayer_ingame : public AppState {
 public:
-  Test(App *app, minesweeper::game_logic::Settings settings)
-      : AppState(app),
-        field1(app, settings, {app->x_max() * 4 / 24, app->y_max() / 12}, 500,
-               500, Cell_button::callback,
-               std::bind(&Test::game_ended, this, std::placeholders::_1)),
-        quit(Graph_lib::Point{app->x_max() * 17 / 24, app->y_max() * 10 / 12},
-             app->x_max() / 7, app->y_max() / 12, "Quit",
-             [](Graph_lib::Address, Graph_lib::Address button_addr) {
-               App &app = get_app_ref(button_addr);
-               app.set_state(new Main_menu{&app});
-             }),
-        restart(Graph_lib::Point{app->x_max() * 17 / 24, app->y_max() * 8 / 12},
-                app->x_max() / 7, app->y_max() / 12, "Restart",
-                [](Graph_lib::Address, Graph_lib::Address button_addr) {
-                  App &app = get_app_ref(button_addr);
-                  Test &menu = dynamic_cast<Test &>(app.get_state());
-                  app.set_state(new Test{&app, menu.field1.settings});
-                }),
-        win_text(Graph_lib::Point{app->x_max() * 17 / 24 + 48,
-                                  app->y_max() * 2 / 12},
-                 ""),
-        defeat_text(Graph_lib::Point{app->x_max() * 17 / 24 + 17,
-                                     app->y_max() * 2 / 12},
-                    ""){};
+  Singleplayer_ingame(App *app, minesweeper::game_logic::Settings settings);
 
-  void enter() override {
-    field1.attach();
-    app->attach(quit);
-    app->attach(restart);
-    win_text.set_font_size(30);
-    defeat_text.set_font_size(30);
-    app->attach(win_text);
-    app->attach(defeat_text);
-  };
-  void exit() override {
-    field1.detach();
-    app->detach(quit);
-    app->detach(restart);
-    app->detach(win_text);
-    app->detach(defeat_text);
-  };
+  void enter() override;
+  void exit() override;
 
-  void game_ended(Field_result res) {
-    if (res == Field_result::won) {
-      std::cout << "WIN\n";
-      win_text.set_label("WIN");
-    } else {
-      std::cout << "DEFEAT!\n";
-      defeat_text.set_label("DEFEAT");
-    }
-  }
+  void game_ended(Field_result res);
 
   Field_widget field1;
   Graph_lib::Button quit;
@@ -194,38 +149,6 @@ public:
   void opponent_move(json::value move_val);
   void game_ended(Field_result res);
   void opponent_game_ended(Field_result res);
-};
-
-class MP_choice : public AppState {
-public:
-  MP_choice(App *app)
-      : AppState(app),
-        client_button{
-            Graph_lib::Point{100, 100}, 100, 100, "Client",
-            [](Graph_lib::Address, Graph_lib::Address button_addr) {
-              App &app = get_app_ref(button_addr);
-              app.set_state(new Multiplayer_ingame{
-                  &app, MP_game_type::client, Multiplayer_args{"127.0.0.1"}});
-            }},
-        server_button{Graph_lib::Point{300, 100}, 100, 100, "Server",
-                      [](Graph_lib::Address, Graph_lib::Address button_addr) {
-                        App &app = get_app_ref(button_addr);
-                        app.set_state(new Multiplayer_ingame{
-                            &app, MP_game_type::host,
-                            Multiplayer_args{game_logic::kMedium}});
-                      }} {};
-
-  void enter() override {
-    app->attach(client_button);
-    app->attach(server_button);
-  };
-  void exit() override {
-    app->detach(client_button);
-    app->detach(server_button);
-  };
-
-  Graph_lib::Button client_button;
-  Graph_lib::Button server_button;
 };
 
 } // namespace minesweeper::app
