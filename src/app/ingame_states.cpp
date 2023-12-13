@@ -79,6 +79,8 @@ void Field_widget::cell_interact(game_logic::IndexPair indexes,
     field.mark_cell(indexes);
     break;
   case Cell_interaction::open:
+    if (field.is_marked(indexes))
+      return;
     if (field.is_bomb(indexes))
       return end_game(Field_result::lost);
     field.open_cell(indexes);
