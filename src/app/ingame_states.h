@@ -82,17 +82,6 @@ public:
   Field_widget field1;
 };
 
-// class Ingame_base : public AppState {
-// public:
-//   Ingame_base(App *app) : AppState(app){};
-
-//   // void enter() override;
-//   // void exit() override;
-
-//   void create_field(game_logic::Field &field);
-
-// };
-
 namespace json = boost::json;           // from <boost/json.hpp>
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
