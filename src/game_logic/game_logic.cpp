@@ -75,13 +75,14 @@ bool Field::is_marked(IndexPair cell) {
 bool Field::is_win() {
   int count_open = 0;
   int count_mark = 0;
-  int amount_num =settings.count_rows*settings.count_columns - settings.count_bomb;
-  for(int i = 0; i < settings.count_rows; i ++){
-    for(int j = 0; j < settings.count_columns; j ++){
-      if (is_open(IndexPair(i,j))){
+  int amount_num =
+      settings.count_rows * settings.count_columns - settings.count_bomb;
+  for (int i = 0; i < settings.count_rows; i++) {
+    for (int j = 0; j < settings.count_columns; j++) {
+      if (is_open(IndexPair(i, j))) {
         count_open += 1;
       }
-      if (is_marked(IndexPair(i,j))){
+      if (is_marked(IndexPair(i, j)) && is_bomb(IndexPair(i, j))) {
         count_mark += 1;
       }
     }
