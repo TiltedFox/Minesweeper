@@ -53,6 +53,7 @@ public:
   bool is_win();
 
   const field_matrix_t &get() { return field; };
+  const Settings get_settings() { return settings; };
 
 private:
   int count_open_sells;
