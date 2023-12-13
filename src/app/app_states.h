@@ -1,7 +1,6 @@
 #ifndef APP_STATES_H
 #define APP_STATES_H
 #include <app/app.h>
-#include <vector>
 
 namespace minesweeper::app {
 
@@ -88,53 +87,6 @@ private:
   Graph_lib::Button back;
 };
 
-struct CellButton : Graph_lib::Button {
-  CellButton(Graph_lib::Point xy, Graph_lib::Callback cb, int r, int c,
-             int r_count, int c_count);
-
-  void attach(Graph_lib::Window &win) override;
-  minesweeper::game_logic::IndexPair get_index() {
-    return minesweeper::game_logic::IndexPair(row, column);
-  }
-
-private:
-  int row;
-  int column;
-};
-
-class Game : public AppState {
-public:
-  Game(App *app, minesweeper::game_logic::Settings settings);
-
-  void enter() override;
-  void exit() override;
-
-private:
-  Graph_lib::Vector_ref<Graph_lib::Line> lines;
-  Graph_lib::Vector_ref<Graph_lib::Rectangle> marks;
-  Graph_lib::Text win_text;
-  Graph_lib::Text lose_text;
-  Graph_lib::Rectangle rec;
-  Graph_lib::Vector_ref<CellButton> cells;
-  Graph_lib::Vector_ref<Graph_lib::Text> Numbers;
-  minesweeper::game_logic::Field field;
-  // Graph_lib::Button restart;  OPTIONAL
-  Graph_lib::Button quit;
-
-  void attach_lose_state();
-  void attach_win_state();
-  void init_buttons();
-  void update();
-  void attach_all_from_field();
-  void attach_number_from_field();
-  void dettach_all_marks();
-  void dettach_all_number();
-  void dettach_all_cells();
-  void dettach_all_lines();
-  void open_all_number();
-  void on_RMB_click(CellButton *btn);
-  void on_click(CellButton *btn);
-};
 } // namespace minesweeper::app
 
 #endif // #ifndef APP_STATES_H

@@ -1,9 +1,12 @@
 #ifndef APP_H
 #define APP_H
 
+#include <functional>
+#include <map>
 #include <memory>
 #include <string>
 #include <thread>
+#include <vector>
 
 // don't move below graph lib unless you want an error
 #include <boost/asio.hpp>
@@ -41,8 +44,6 @@ public:
   App(int w, int h, const std::string &title);
 
   void set_state(AppState *new_state);
-  AppState &get_state() { return *current_state; };
-
   AppState &get_state() { return *current_state; };
 
 private:
