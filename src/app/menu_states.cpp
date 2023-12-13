@@ -36,7 +36,7 @@ void Main_menu::enter() {
   app->attach(singleplayer_button);
   app->attach(multiplayer_button);
   app->attach(quit);
-  header.set_font_size(40);
+  header.set_font_size(46);
   header.set_color(Graph_lib::Color::black);
   app->attach(header);
 }
@@ -76,9 +76,12 @@ Singleplayer_menu::Singleplayer_menu(App *app)
             App &app = get_app_ref(button_addr);
             Singleplayer_menu &menu =
                 dynamic_cast<Singleplayer_menu &>(app.get_state());
-            if (menu.area_box.get_int() > 20) {
-            } else if (menu.mines_box.get_int() >
-                       menu.area_box.get_int() * menu.area_box.get_int() / 2) {
+            if ((menu.area_box.get_int() > 20) ||
+                (menu.area_box.get_int() < 2)) {
+            } else if ((menu.mines_box.get_int() > menu.area_box.get_int() *
+                                                       menu.area_box.get_int() /
+                                                       2) ||
+                       (menu.mines_box.get_int() < 1)) {
             } else
               app.set_state(new Test{&app, minesweeper::game_logic::Settings{
                                                menu.area_box.get_int(),
@@ -90,7 +93,7 @@ Singleplayer_menu::Singleplayer_menu(App *app)
       mines_box{Graph_lib::Point{app->x_max() * 9 / 14, app->y_max() * 4 / 7},
                 app->x_max() / 7, app->y_max() / 10, "Mines"},
       input_condition{Graph_lib::Point{app->x_max() / 3, app->y_max() * 3 / 4},
-                      "Area must be <20 and mines < 2/3 * area"},
+                      "Custom: 1 < area < 20, 0 < mines < area / 2"},
       back{Graph_lib::Point{(app->x_max() - app->x_max() / 4) / 2,
                             app->y_max() * 5 / 6},
            app->x_max() / 4, app->y_max() / 10, "Back",
@@ -218,9 +221,12 @@ MP_host_menu::MP_host_menu(App *app)
           [](Graph_lib::Address, Graph_lib::Address button_addr) {
             App &app = get_app_ref(button_addr);
             MP_host_menu &menu = dynamic_cast<MP_host_menu &>(app.get_state());
-            if (menu.area_box.get_int() > 20) {
-            } else if (menu.mines_box.get_int() >
-                       menu.area_box.get_int() * menu.area_box.get_int() / 2) {
+            if ((menu.area_box.get_int() > 20) ||
+                (menu.area_box.get_int() < 2)) {
+            } else if ((menu.mines_box.get_int() > menu.area_box.get_int() *
+                                                       menu.area_box.get_int() /
+                                                       2) ||
+                       (menu.mines_box.get_int() < 1)) {
             } else
               app.set_state(new Test{&app, minesweeper::game_logic::Settings{
                                                menu.area_box.get_int(),
@@ -232,7 +238,7 @@ MP_host_menu::MP_host_menu(App *app)
       mines_box{Graph_lib::Point{app->x_max() * 9 / 14, app->y_max() * 4 / 7},
                 app->x_max() / 7, app->y_max() / 10, "Mines"},
       input_condition{Graph_lib::Point{app->x_max() / 3, app->y_max() * 3 / 4},
-                      "Area must be < 20 and mines < 2/3 * area"},
+                      "Custom: 1 < area < 20, 0 < mines < area / 2"},
       back{Graph_lib::Point{(app->x_max() - app->x_max() / 4) / 2,
                             app->y_max() * 5 / 6},
            app->x_max() / 4, app->y_max() / 10, "Back",

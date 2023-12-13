@@ -28,11 +28,11 @@ enum class Field_result { won, lost };
 enum class Cell_interaction { open, mark };
 using CLR = Graph_lib::Color;
 static std::map<std::string, CLR> CELL_COLORS{
-    {"0", CLR(CLR::invisible)},   {"1", CLR(CLR::blue)},
-    {"2", CLR(CLR::dark_blue)},   {"3", CLR(CLR::green)},
-    {"4", CLR(CLR::dark_green)},  {"5", CLR(CLR::yellow)},
-    {"6", CLR(CLR::dark_yellow)}, {"7", CLR(CLR::red)},
-    {"8", CLR(CLR::dark_red)},    {"9", CLR(CLR::black)}};
+    {"0", CLR(CLR::invisible)},  {"1", CLR(CLR::blue)},
+    {"2", CLR(CLR::dark_green)}, {"3", CLR(CLR::red)},
+    {"4", CLR(CLR::dark_blue)},  {"5", CLR(CLR::dark_red)},
+    {"6", CLR(CLR::dark_cyan)},  {"7", CLR(CLR::dark_magenta)},
+    {"8", CLR(CLR::black)},      {"9", CLR(CLR::black)}};
 
 struct Field_widget {
   Field_widget(App *app, game_logic::Settings settings, Graph_lib::Point xy,
@@ -73,21 +73,61 @@ class Test : public AppState {
 public:
   Test(App *app, minesweeper::game_logic::Settings settings)
       : AppState(app),
-        field1(app, settings, {100, 50}, 500, 500, Cell_button::callback,
-               std::bind(&Test::game_ended, this, std::placeholders::_1)){};
+        field1(app, settings, {app->x_max() * 4 / 24, app->y_max() / 12}, 500,
+               500, Cell_button::callback,
+               std::bind(&Test::game_ended, this, std::placeholders::_1)),
+        quit(Graph_lib::Point{app->x_max() * 17 / 24, app->y_max() * 10 / 12},
+             app->x_max() / 7, app->y_max() / 12, "Quit",
+             [](Graph_lib::Address, Graph_lib::Address button_addr) {
+               App &app = get_app_ref(button_addr);
+               app.set_state(new Main_menu{&app});
+             }),
+        restart(Graph_lib::Point{app->x_max() * 17 / 24, app->y_max() * 8 / 12},
+                app->x_max() / 7, app->y_max() / 12, "Restart",
+                [](Graph_lib::Address, Graph_lib::Address button_addr) {
+                  App &app = get_app_ref(button_addr);
+                  Test &menu = dynamic_cast<Test &>(app.get_state());
+                  app.set_state(new Test{&app, menu.field1.settings});
+                }),
+        win_text(Graph_lib::Point{app->x_max() * 17 / 24 + 48,
+                                  app->y_max() * 2 / 12},
+                 ""),
+        defeat_text(Graph_lib::Point{app->x_max() * 17 / 24 + 17,
+                                     app->y_max() * 2 / 12},
+                    ""){};
 
-  void enter() override { field1.attach(); };
-  void exit() override { field1.detach(); };
+  void enter() override {
+    field1.attach();
+    app->attach(quit);
+    app->attach(restart);
+    win_text.set_font_size(30);
+    defeat_text.set_font_size(30);
+    app->attach(win_text);
+    app->attach(defeat_text);
+  };
+  void exit() override {
+    field1.detach();
+    app->detach(quit);
+    app->detach(restart);
+    app->detach(win_text);
+    app->detach(defeat_text);
+  };
 
   void game_ended(Field_result res) {
-    if (res == Field_result::won)
+    if (res == Field_result::won) {
       std::cout << "WIN\n";
-
-    else
+      win_text.set_label("WIN");
+    } else {
       std::cout << "DEFEAT!\n";
+      defeat_text.set_label("DEFEAT");
+    }
   }
 
   Field_widget field1;
+  Graph_lib::Button quit;
+  Graph_lib::Button restart;
+  Graph_lib::Text win_text;
+  Graph_lib::Text defeat_text;
 };
 
 namespace json = boost::json;           // from <boost/json.hpp>
