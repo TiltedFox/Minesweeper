@@ -36,7 +36,7 @@ void Main_menu::enter() {
   app->attach(singleplayer_button);
   app->attach(multiplayer_button);
   app->attach(quit);
-  header.set_font_size(40);
+  header.set_font_size(46);
   header.set_color(Graph_lib::Color::black);
   app->attach(header);
 }
