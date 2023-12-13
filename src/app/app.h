@@ -41,6 +41,7 @@ public:
   App(int w, int h, const std::string &title);
 
   void set_state(AppState *new_state);
+  AppState &get_state() { return *current_state; };
 
   AppState &get_state() { return *current_state; };
 

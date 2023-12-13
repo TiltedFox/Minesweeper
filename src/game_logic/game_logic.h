@@ -15,9 +15,9 @@ struct Settings {
         count_bomb{count_bomb} {};
 };
 
-const Settings kEasy{8, 8, 20};
-const Settings kMedium{10, 10, 50};
-const Settings kHard{15, 15, 100};
+const Settings kEasy{8, 8, 10};
+const Settings kMedium{10, 10, 25};
+const Settings kHard{15, 15, 50};
 
 struct Cell {
   int count_bomb; // 9 means a bomb is in the cell
@@ -42,18 +42,24 @@ using field_matrix_t = std::vector<std::vector<Cell>>;
 
 class Field {
 public:
-  Field(Settings settings, IndexPair start);
+  Field(Settings settings);
 
-  bool open_cell(IndexPair cell);
+  void generate_field(IndexPair start);
+  void open_cell(IndexPair cell);
   void mark_cell(IndexPair cell);
+  bool is_bomb(IndexPair cell);
+  bool is_open(IndexPair cell);
+  bool is_marked(IndexPair cell);
+  bool is_win();
 
-  const field_matrix_t &get_field() { return field; };
+  const field_matrix_t &get() { return field; };
 
 private:
+  int count_open_sells;
+
   Settings settings = kMedium;
   field_matrix_t field;
 
-  void generate_field(IndexPair start);
   bool is_valid_index(int row, int column);
   std::vector<IndexPair> get_bomb_indexes(IndexPair start);
 };

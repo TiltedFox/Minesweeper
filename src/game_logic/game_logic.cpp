@@ -11,41 +11,14 @@ using namespace std;
 
 namespace minesweeper::game_logic {
 
-Field::Field(Settings settings, IndexPair start) : settings{settings} {
+Field::Field(Settings settings) : settings{settings} {}
+
+void Field::generate_field(IndexPair start) {
   field_matrix_t field_temp(settings.count_rows,
                             vector<Cell>(settings.count_columns, Cell{0}));
 
   field = field_temp;
-  generate_field(start);
-}
 
-bool Field::open_cell(IndexPair cell) {
-  Cell &curr_cell = field.at(cell.row).at(cell.column);
-
-  curr_cell.open();
-
-  if (curr_cell.count_bomb == 9)
-    return false;
-
-  if (curr_cell.count_bomb == 0)
-    for (int i = cell.row - 1; i <= cell.row + 1; i++)
-      for (int j = cell.column - 1; j <= cell.column + 1; j++) {
-        if (!is_valid_index(i, j))
-          continue;
-        if (field.at(i).at(j).is_open)
-          continue;
-
-        open_cell(IndexPair{i, j});
-      }
-
-  return true;
-}
-
-void Field::mark_cell(IndexPair cell) {
-  field.at(cell.row).at(cell.column).mark();
-}
-
-void Field::generate_field(IndexPair start) {
   vector<IndexPair> bomb_indexes = get_bomb_indexes(start);
 
   for (int i = 0; i < settings.count_bomb; i++) {
@@ -64,6 +37,56 @@ void Field::generate_field(IndexPair start) {
         field.at(j).at(k).count_bomb += 1;
       }
   }
+}
+
+void Field::open_cell(IndexPair cell) {
+  Cell &curr_cell = field.at(cell.row).at(cell.column);
+
+  curr_cell.open();
+
+  if (curr_cell.count_bomb == 0)
+    for (int i = cell.row - 1; i <= cell.row + 1; i++)
+      for (int j = cell.column - 1; j <= cell.column + 1; j++) {
+        if (!is_valid_index(i, j))
+          continue;
+        if (field.at(i).at(j).is_open)
+          continue;
+
+        open_cell(IndexPair{i, j});
+      }
+}
+
+void Field::mark_cell(IndexPair cell) {
+  field.at(cell.row).at(cell.column).mark();
+}
+
+bool Field::is_bomb(IndexPair cell) {
+  return field.at(cell.row).at(cell.column).count_bomb == 9;
+}
+
+bool Field::is_open(IndexPair cell) {
+  return field.at(cell.row).at(cell.column).is_open;
+}
+
+bool Field::is_marked(IndexPair cell) {
+  return field.at(cell.row).at(cell.column).is_marked;
+}
+
+bool Field::is_win() {
+  int count_open = 0;
+  int count_mark = 0;
+  int amount_num =settings.count_rows*settings.count_columns - settings.count_bomb;
+  for(int i = 0; i < settings.count_rows; i ++){
+    for(int j = 0; j < settings.count_columns; j ++){
+      if (is_open(IndexPair(i,j))){
+        count_open += 1;
+      }
+      if (is_marked(IndexPair(i,j))){
+        count_mark += 1;
+      }
+    }
+  }
+  return (count_open == amount_num && count_mark == settings.count_bomb);
 }
 
 vector<IndexPair> Field::get_bomb_indexes(IndexPair start) {
