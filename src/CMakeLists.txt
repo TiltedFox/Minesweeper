@@ -15,8 +15,8 @@ set(APP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/app")
 add_library(app
     ${APP_DIR}/app.h
     ${APP_DIR}/app.cpp
-    ${APP_DIR}/app_states.h
-    ${APP_DIR}/app_states.cpp
+    ${APP_DIR}/menu_states.h
+    ${APP_DIR}/menu_states.cpp
     ${APP_DIR}/ingame_states.h
     ${APP_DIR}/ingame_states.cpp
 )

@@ -16,6 +16,8 @@ struct Cell_button : public Graph_lib::Button {
   game_logic::IndexPair indexes() { return {row, column}; }
 
   static void callback(Graph_lib::Address, Graph_lib::Address cell_addr);
+  static void callback_multiplayer(Graph_lib::Address,
+                                   Graph_lib::Address cell_addr);
 
   Field_widget *field_widget;
   int row;
@@ -36,6 +38,12 @@ struct Field_widget {
   Field_widget(App *app, game_logic::Settings settings, Graph_lib::Point xy,
                int w, int h, Graph_lib::Callback cell_callback,
                std::function<void(Field_result)> end_callback);
+
+  Field_widget(App *app, const game_logic::Field &field, Graph_lib::Point xy,
+               int w, int h, Graph_lib::Callback cell_callback,
+               std::function<void(Field_result)> end_callback);
+
+  void init_field(Graph_lib::Callback cell_callback);
 
   void attach();
   void detach();
@@ -123,8 +131,9 @@ public:
   void on_handshake(beast::error_code ec);
   void on_write(beast::error_code ec, std::size_t bytes_transferred);
   void on_read(beast::error_code ec, std::size_t bytes_transferred);
-
   void write_json(json::value val);
+  void close_connection();
+  void clean_up(beast::error_code ec);
 
   asio::io_context ioc;
   std::string address;
@@ -134,9 +143,49 @@ public:
   std::thread thread;
   beast::flat_buffer read_buffer;
 
-  Graph_lib::In_box input_box;
   Graph_lib::Out_box output_box;
-  Graph_lib::Button send_button;
+  Graph_lib::Button quit_button;
+  void write_output(std::string out) { output_box.put(out); }
+
+  std::unique_ptr<Field_widget> own_field;
+  std::unique_ptr<Field_widget> opponent_field;
+  void client_create_fields(json::value field_val);
+  game_logic::IndexPair server_create_fields();
+  void opponent_move(json::value move_val);
+  void game_ended(Field_result res);
+  void opponent_game_ended(Field_result res);
+};
+
+class MP_choice : public AppState {
+public:
+  MP_choice(App *app)
+      : AppState(app),
+        client_button{
+            Graph_lib::Point{100, 100}, 100, 100, "Client",
+            [](Graph_lib::Address, Graph_lib::Address button_addr) {
+              App &app = get_app_ref(button_addr);
+              app.set_state(new Multiplayer_ingame{
+                  &app, MP_game_type::client, Multiplayer_args{"127.0.0.1"}});
+            }},
+        server_button{Graph_lib::Point{300, 100}, 100, 100, "Server",
+                      [](Graph_lib::Address, Graph_lib::Address button_addr) {
+                        App &app = get_app_ref(button_addr);
+                        app.set_state(new Multiplayer_ingame{
+                            &app, MP_game_type::host,
+                            Multiplayer_args{game_logic::kMedium}});
+                      }} {};
+
+  void enter() override {
+    app->attach(client_button);
+    app->attach(server_button);
+  };
+  void exit() override {
+    app->detach(client_button);
+    app->detach(server_button);
+  };
+
+  Graph_lib::Button client_button;
+  Graph_lib::Button server_button;
 };
 
 } // namespace minesweeper::app

@@ -13,13 +13,25 @@ namespace minesweeper::game_logic {
 
 Field::Field(Settings settings) : settings{settings} {}
 
+Field::Field(const Field &field_copy)
+    : settings{field_copy.get_settings()},
+      field{settings.count_rows,
+            vector<Cell>(settings.count_columns, Cell{0})} {
+  const field_matrix_t &data = field_copy.get();
+  for (int i = 0; i < settings.count_rows; i++) {
+    for (int j = 0; j < settings.count_columns; j++) {
+      field[i][j] = data[i][j];
+    }
+  }
+}
+
 void Field::generate_field(IndexPair start) {
-  field_matrix_t field_temp(settings.count_rows,
-                            vector<Cell>(settings.count_columns, Cell{0}));
+  generate_field(get_bomb_indexes(start));
+}
 
-  field = field_temp;
-
-  vector<IndexPair> bomb_indexes = get_bomb_indexes(start);
+void Field::generate_field(vector<IndexPair> bomb_indexes) {
+  field = field_matrix_t(settings.count_rows,
+                         vector<Cell>(settings.count_columns, Cell{0}));
 
   for (int i = 0; i < settings.count_bomb; i++) {
     int row = bomb_indexes[i].row;

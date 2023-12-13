@@ -1,5 +1,5 @@
-#include <app/app_states.h>
 #include <app/ingame_states.h>
+#include <app/menu_states.h>
 
 namespace minesweeper::app {
 
@@ -13,12 +13,47 @@ void Cell_button::callback(Graph_lib::Address, Graph_lib::Address cell_addr) {
     field_widget.cell_interact(cell.indexes(), Cell_interaction::open);
 }
 
+void Cell_button::callback_multiplayer(Graph_lib::Address,
+                                       Graph_lib::Address cell_addr) {
+  Multiplayer_ingame &state = get_state_ref<Multiplayer_ingame>(cell_addr);
+  Cell_button &cell = *static_cast<Cell_button *>(cell_addr);
+
+  std::string interaction;
+
+  if (cell.is_RMB_click())
+    interaction = "mark";
+  else if (cell.is_LMB_click())
+    interaction = "open";
+
+  json::value move_val{
+      {"type", "move"},
+      {"cell_indexes", {cell.indexes().row, cell.indexes().column}},
+      {"interaction", interaction}};
+
+  state.write_json(move_val);
+
+  Cell_button::callback(nullptr, cell_addr);
+}
+
 Field_widget::Field_widget(App *app, game_logic::Settings settings,
                            Graph_lib::Point xy, int w, int h,
                            Graph_lib::Callback cell_callback,
                            std::function<void(Field_result)> end_callback)
     : app{app}, settings{settings}, upper_left{xy}, width{w}, height{h},
       field{settings}, end_callback{end_callback} {
+  init_field(cell_callback);
+}
+
+Field_widget::Field_widget(App *app, const game_logic::Field &field,
+                           Graph_lib::Point xy, int w, int h,
+                           Graph_lib::Callback cell_callback,
+                           std::function<void(Field_result)> end_callback)
+    : app{app}, settings{field.get_settings()}, upper_left{xy}, width{w},
+      height{h}, field{field}, end_callback{end_callback} {
+  init_field(cell_callback);
+}
+
+void Field_widget::init_field(Graph_lib::Callback cell_callback) {
   int widget_width = width / settings.count_columns;
   int widget_height = height / settings.count_rows;
 
@@ -129,21 +164,24 @@ Multiplayer_ingame::Multiplayer_ingame(App *app, MP_game_type game_type,
     : AppState(app), game_type{game_type}, settings{args.settings},
       address{args.address}, resolver{ioc},
       acceptor{ioc, tcp::endpoint(tcp::v4(), PORT)},
-      input_box({100, 100}, 300, 100, "Sent text"),
-      output_box({500, 100}, 300, 100, "Received text"),
-      send_button(
-          {200, 200}, 100, 50, "Send the text",
-          [](Graph_lib::Address, Graph_lib::Address button_addr) {
-            auto &state_ref = get_state_ref<Multiplayer_ingame>(button_addr);
-            state_ref.write_json({{"message", state_ref.input_box.get_string()},
-                                  {"test", "123"}});
-          }) {
+      output_box({app->x_max() / 2 - 150, 10}, 300, 30, ""),
+      quit_button({app->x_max() / 2 - 50, app->y_max() - 40}, 100, 30, "Quit",
+                  [](Graph_lib::Address, Graph_lib::Address button_addr) {
+                    App &app = get_app_ref(button_addr);
+                    Multiplayer_ingame &state =
+                        get_state_ref<Multiplayer_ingame>(button_addr);
+
+                    state.close_connection();
+                    state.ioc.stop();
+                    state.thread.join();
+                    app.set_state(new Main_menu(&app));
+                  }) {
   if (game_type == MP_game_type::host) {
-    std::cout << get_local_ip() << " awaiting connection\n";
+    // std::cout << "Awating";
     acceptor.async_accept(
         ioc, beast::bind_front_handler(&Multiplayer_ingame::on_accept, this));
   } else if (game_type == MP_game_type::client) {
-    std::cout << "Tyring to connect!\n";
+    std::cout << "Trying to connect!\n";
     ws_p = std::make_unique<websocket::stream<beast::tcp_stream>>(ioc);
     resolver.async_resolve(
         address, std::to_string(PORT),
@@ -180,18 +218,50 @@ void Multiplayer_ingame::on_handshake(beast::error_code ec) {
   if (ec)
     std::cerr << ec.message() << "\n";
   std::cout << "Successful websocket handshake!\n";
+
+  write_output("Connected!");
+
+  if (game_type == MP_game_type::host) {
+    game_logic::IndexPair start_pos = server_create_fields();
+    std::vector<std::pair<int, int>> bombs;
+    const game_logic::field_matrix_t &cells = own_field->field.get();
+
+    for (int i = 0; i < settings.count_rows; ++i)
+      for (int j = 0; j < settings.count_columns; ++j)
+        if (cells[i][j].count_bomb == 9)
+          bombs.push_back({i, j});
+
+    json::value field_val = {
+        {"type", "field"},
+        {"settings",
+         {settings.count_rows, settings.count_columns, settings.count_bomb}},
+        {"bombs", json::value_from(bombs)},
+        {"start_pos", {start_pos.row, start_pos.column}}};
+    write_json(field_val);
+  }
+
   ws_p->async_read(read_buffer, beast::bind_front_handler(
                                     &Multiplayer_ingame::on_read, this));
 }
 
-void Multiplayer_ingame::on_read(beast::error_code ec,
-                                 std::size_t bytes_transferred) {
+void Multiplayer_ingame::on_read(beast::error_code ec, std::size_t) {
+  if (ec) {
+    return clean_up(ec);
+  }
+
   unsigned char *data = static_cast<unsigned char *>(read_buffer.data().data());
-  std::string msg;
-  for (int i = 0; i < read_buffer.data().size(); ++i)
-    msg += data[i];
-  output_box.put(msg);
+  std::string raw;
+  for (std::size_t i = 0; i < read_buffer.data().size(); ++i)
+    raw += data[i];
   read_buffer.clear();
+  json::value msg = json::parse(raw);
+  if (game_type == MP_game_type::client) {
+    if (msg.at("type") == "field")
+      client_create_fields(msg);
+  }
+  if (msg.at("type") == "move")
+    opponent_move(msg);
+
   ws_p->async_read(read_buffer, beast::bind_front_handler(
                                     &Multiplayer_ingame::on_read, this));
 }
@@ -212,7 +282,6 @@ void Multiplayer_ingame::on_connect(
     beast::error_code ec, tcp::resolver::results_type::endpoint_type ep) {
   if (ec)
     std::cerr << ec.message() << "\n";
-  std::cout << "Connected!\n";
 
   // Turn off the timeout on the tcp_stream, because
   // the websocket stream has its own timeout system.
@@ -231,23 +300,137 @@ void Multiplayer_ingame::on_write(beast::error_code ec,
 }
 
 void Multiplayer_ingame::write_json(json::value val) {
-  if (!ws_p)
+  if (!ws_p) {
     std::cerr << "Attempted write with no socket open\n";
+    return;
+  }
+
   ws_p->async_write(
       asio::buffer(json::serialize(val)),
       beast::bind_front_handler(&Multiplayer_ingame::on_write, this));
 }
 
 void Multiplayer_ingame::enter() {
-  app->attach(input_box);
   app->attach(output_box);
-  app->attach(send_button);
+  if (game_type == MP_game_type::host)
+    write_output("Awating connection at " + get_local_ip());
+  else if (game_type == MP_game_type::client)
+    write_output("Attempting to connect to " + address);
+  app->attach(quit_button);
 }
 
 void Multiplayer_ingame::exit() {
-  app->detach(input_box);
+  if (own_field)
+    own_field->detach();
+  if (opponent_field)
+    opponent_field->detach();
   app->detach(output_box);
-  app->detach(send_button);
+  app->detach(quit_button);
+}
+
+game_logic::IndexPair Multiplayer_ingame::server_create_fields() {
+  own_field = std::make_unique<Field_widget>(
+      app, settings, Graph_lib::Point{app->x_max() / 24, app->y_max() / 12},
+      app->x_max() * 5 / 12, app->y_max() * 5 / 6,
+      Cell_button::callback_multiplayer,
+      std::bind(&Multiplayer_ingame::game_ended, this, std::placeholders::_1));
+  own_field->field.generate_field({0, 0});
+
+  game_logic::IndexPair start_pos{settings.count_rows / 2,
+                                  settings.count_columns / 2};
+  const game_logic::field_matrix_t &cells = own_field->field.get();
+  for (int i = 0; i < settings.count_rows; ++i)
+    for (int j = 0; j < settings.count_columns; ++j)
+      if (cells[i][j].count_bomb == 0)
+        start_pos = {i, j};
+
+  own_field->attach();
+  own_field->cell_interact(start_pos, Cell_interaction::open);
+
+  opponent_field = std::make_unique<Field_widget>(
+      app, own_field->field,
+      Graph_lib::Point{app->x_max() * 13 / 24, app->y_max() / 12},
+      app->x_max() * 5 / 12, app->y_max() * 5 / 6,
+      [](Graph_lib::Address, Graph_lib::Address) {},
+      std::bind(&Multiplayer_ingame::opponent_game_ended, this,
+                std::placeholders::_1));
+  opponent_field->attach();
+  opponent_field->cell_interact(start_pos, Cell_interaction::open);
+
+  return start_pos;
+}
+
+void Multiplayer_ingame::client_create_fields(json::value field_val) {
+  json::value settings_val = field_val.at("settings").as_array();
+  game_logic::Settings settings_received{
+      settings_val.at(0).as_int64(),
+      settings_val.at(1).as_int64(),
+      settings_val.at(2).as_int64(),
+  };
+  settings = settings_received;
+
+  std::vector<game_logic::IndexPair> bombs;
+  for (auto elem : field_val.at("bombs").as_array())
+    bombs.push_back({elem.at(0).as_int64(), elem.at(1).as_int64()});
+
+  json::value start_pos_val = field_val.at("start_pos").as_array();
+  game_logic::IndexPair start_pos{start_pos_val.at(0).as_int64(),
+                                  start_pos_val.at(1).as_int64()};
+  game_logic::Field base_field(settings);
+  base_field.generate_field(bombs);
+
+  own_field = std::make_unique<Field_widget>(
+      app, base_field, Graph_lib::Point{app->x_max() / 24, app->y_max() / 12},
+      app->x_max() * 5 / 12, app->y_max() * 5 / 6,
+      Cell_button::callback_multiplayer,
+      std::bind(&Multiplayer_ingame::game_ended, this, std::placeholders::_1));
+  own_field->attach();
+  own_field->cell_interact(start_pos, Cell_interaction::open);
+
+  opponent_field = std::make_unique<Field_widget>(
+      app, base_field,
+      Graph_lib::Point{app->x_max() * 13 / 24, app->y_max() / 12},
+      app->x_max() * 5 / 12, app->y_max() * 5 / 6,
+      [](Graph_lib::Address, Graph_lib::Address) {},
+      std::bind(&Multiplayer_ingame::opponent_game_ended, this,
+                std::placeholders::_1));
+  opponent_field->attach();
+  opponent_field->cell_interact(start_pos, Cell_interaction::open);
+}
+
+void Multiplayer_ingame::opponent_move(json::value move_val) {
+  json::value cell_indexes_val = move_val.at("cell_indexes").as_array();
+  game_logic::IndexPair cell_indexes{cell_indexes_val.at(0).as_int64(),
+                                     cell_indexes_val.at(1).as_int64()};
+  if (move_val.at("interaction") == "open")
+    opponent_field->cell_interact(cell_indexes, Cell_interaction::open);
+  else if (move_val.at("interaction") == "mark")
+    opponent_field->cell_interact(cell_indexes, Cell_interaction::mark);
+}
+
+void Multiplayer_ingame::close_connection() {
+  if (ws_p)
+    ws_p->async_close(websocket::close_code::none, [](beast::error_code) {});
+}
+
+void Multiplayer_ingame::clean_up(beast::error_code ec) {
+  std::cerr << ec.message();
+}
+
+void Multiplayer_ingame::game_ended(Field_result res) {
+  switch (res) {
+  case Field_result::won:
+    write_output("You win!");
+    break;
+  case Field_result::lost:
+    write_output("You lose...");
+    break;
+  }
+  close_connection();
+};
+
+void Multiplayer_ingame::opponent_game_ended(Field_result res) {
+  game_ended(res == Field_result::won ? Field_result::lost : Field_result::won);
 }
 
 } // namespace minesweeper::app

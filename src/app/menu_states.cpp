@@ -1,5 +1,5 @@
-#include <app/app_states.h>
 #include <app/ingame_states.h>
+#include <app/menu_states.h>
 
 namespace minesweeper::app {
 

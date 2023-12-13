@@ -44,6 +44,9 @@ class Field {
 public:
   Field(Settings settings);
 
+  Field(const Field &field_copy);
+
+  void generate_field(std::vector<IndexPair> bomb_indexes);
   void generate_field(IndexPair start);
   void open_cell(IndexPair cell);
   void mark_cell(IndexPair cell);
@@ -52,8 +55,8 @@ public:
   bool is_marked(IndexPair cell);
   bool is_win();
 
-  const field_matrix_t &get() { return field; };
-  const Settings get_settings() { return settings; };
+  const field_matrix_t &get() const { return field; };
+  Settings get_settings() const { return settings; };
 
 private:
   int count_open_sells;
