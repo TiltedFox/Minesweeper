@@ -151,6 +151,10 @@ public:
   void opponent_game_ended(Field_result res);
 };
 
+inline int as_int32(json::value &val) {
+  return static_cast<int>(val.as_int64());
+}
+
 } // namespace minesweeper::app
 
 #endif // ifndef INGAME_STATES_H

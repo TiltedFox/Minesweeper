@@ -419,20 +419,18 @@ game_logic::IndexPair Multiplayer_ingame::server_create_fields() {
 
 void Multiplayer_ingame::client_create_fields(json::value field_val) {
   json::value settings_val = field_val.at("settings").as_array();
-  game_logic::Settings settings_received{
-      settings_val.at(0).as_int64(),
-      settings_val.at(1).as_int64(),
-      settings_val.at(2).as_int64(),
-  };
+  game_logic::Settings settings_received{as_int32(settings_val.at(0)),
+                                         as_int32(settings_val.at(1)),
+                                         as_int32(settings_val.at(2))};
   settings = settings_received;
 
   std::vector<game_logic::IndexPair> bombs;
   for (auto elem : field_val.at("bombs").as_array())
-    bombs.push_back({elem.at(0).as_int64(), elem.at(1).as_int64()});
+    bombs.push_back({as_int32(elem.at(0)), as_int32(elem.at(1))});
 
   json::value start_pos_val = field_val.at("start_pos").as_array();
-  game_logic::IndexPair start_pos{start_pos_val.at(0).as_int64(),
-                                  start_pos_val.at(1).as_int64()};
+  game_logic::IndexPair start_pos{as_int32(start_pos_val.at(0)),
+                                  as_int32(start_pos_val.at(1))};
   game_logic::Field base_field(settings);
   base_field.generate_field(bombs);
 
@@ -457,8 +455,8 @@ void Multiplayer_ingame::client_create_fields(json::value field_val) {
 
 void Multiplayer_ingame::opponent_move(json::value move_val) {
   json::value cell_indexes_val = move_val.at("cell_indexes").as_array();
-  game_logic::IndexPair cell_indexes{cell_indexes_val.at(0).as_int64(),
-                                     cell_indexes_val.at(1).as_int64()};
+  game_logic::IndexPair cell_indexes{as_int32(cell_indexes_val.at(0)),
+                                     as_int32(cell_indexes_val.at(1))};
   if (move_val.at("interaction") == "open")
     opponent_field->cell_interact(cell_indexes, Cell_interaction::open);
   else if (move_val.at("interaction") == "mark")
